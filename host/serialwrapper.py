@@ -8,7 +8,7 @@ class SerialWrapper:
     def __init__(self, device):
         self.ser = serial.Serial(port=device, baudrate=115200, timeout=0)
         self.readData()
-        self.stop_thread = False       
+        shared.stop_thread = False       
 
     def sendData(self, data):
         data += "\r\n"
