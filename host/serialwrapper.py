@@ -1,8 +1,10 @@
 import threading
 import serial
 import shared
+from threading import Lock
 
 stop_thread = False
+mutex = Lock()
 
 class SerialWrapper:
     def __init__(self, device):
@@ -11,8 +13,15 @@ class SerialWrapper:
         shared.stop_thread = False       
 
     def sendData(self, data):
-        data += "\r\n"
-        self.ser.write(data.encode())
+        mutex.acquire()
+        try:
+            data += "\r\n"
+            self.ser.write(data.encode())
+        except:
+            pass
+        finally:
+            mutex.release()
+       
     
     def readData(self):
         self.readingThread = ReadLine(self.ser)

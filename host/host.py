@@ -4,6 +4,7 @@ import shared
 from serialwrapper import SerialWrapper
 import threading
 from threading import Lock
+import time
 
 mutex = Lock()
 
@@ -15,26 +16,15 @@ def keyboardInterruptHandler(signal, frame):
 
 signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
+
 if __name__ ==  '__main__':
 
     ser = SerialWrapper(shared.port)
-    
-    """ while True:
-        ser.readData
-        #ser.sendData("sent data") """
 
-    mutex.acquire()
-    try:
-        ser.sendData("root")
-        time.sleep(0.3)
-        ser.sendData("./serialcom")
-        time.sleep(0.3)
-        ser.sendData("SWITCH")
-    except:
-        pass
-    finally:
-        mutex.release()
+    ser.sendData("root")
+    ser.sendData("./serialcom")
+    time.sleep(0.3)
+    ser.sendData("SWITCH")
 
     while True:
-        with mutex:
-           ser.readData
+        time.sleep(1)
