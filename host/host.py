@@ -22,9 +22,10 @@ if __name__ ==  '__main__':
     ser = SerialWrapper(shared.port)
 
     ser.sendData("root")
+    time.sleep(0.3)
     ser.sendData("./serialcom")
     time.sleep(0.3)
-    ser.sendData("SWITCH")
+    ser.sendData("switch")
 
     while True:
         time.sleep(1)

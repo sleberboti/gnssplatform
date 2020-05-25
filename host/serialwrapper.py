@@ -28,6 +28,8 @@ class SerialWrapper:
         self.readingThread.start()
     
     def stop(self):
+        #self.sendData("\x03")
+        self.sendData("exit")
         self.readingThread.join()
         self.ser.close()
 
