@@ -89,5 +89,57 @@
 #define MAGNETOMETER_I2C_END 0x5f
 #define MAGNETOMETER_I2C_IRQ 1
 
+/*
+ * Macros for device 'sx_1272_spi', class 'altera_avalon_spi'
+ * The macros are prefixed with 'SX_1272_SPI_'.
+ * The prefix is the slave descriptor.
+ */
+#define SX_1272_SPI_COMPONENT_TYPE altera_avalon_spi
+#define SX_1272_SPI_COMPONENT_NAME sx_1272_spi
+#define SX_1272_SPI_BASE 0x60
+#define SX_1272_SPI_SPAN 32
+#define SX_1272_SPI_END 0x7f
+#define SX_1272_SPI_IRQ 2
+#define SX_1272_SPI_CLOCKMULT 1
+#define SX_1272_SPI_CLOCKPHASE 0
+#define SX_1272_SPI_CLOCKPOLARITY 0
+#define SX_1272_SPI_CLOCKUNITS "Hz"
+#define SX_1272_SPI_DATABITS 8
+#define SX_1272_SPI_DATAWIDTH 16
+#define SX_1272_SPI_DELAYMULT "1.0E-9"
+#define SX_1272_SPI_DELAYUNITS "ns"
+#define SX_1272_SPI_EXTRADELAY 0
+#define SX_1272_SPI_INSERT_SYNC 0
+#define SX_1272_SPI_ISMASTER 1
+#define SX_1272_SPI_LSBFIRST 0
+#define SX_1272_SPI_NUMSLAVES 1
+#define SX_1272_SPI_PREFIX "spi_"
+#define SX_1272_SPI_SYNC_REG_DEPTH 2
+#define SX_1272_SPI_TARGETCLOCK 5000000
+#define SX_1272_SPI_TARGETSSDELAY "0.0"
+
+/*
+ * Macros for device 'CV5_25_uart', class 'altera_avalon_uart'
+ * The macros are prefixed with 'CV5_25_UART_'.
+ * The prefix is the slave descriptor.
+ */
+#define CV5_25_UART_COMPONENT_TYPE altera_avalon_uart
+#define CV5_25_UART_COMPONENT_NAME CV5_25_uart
+#define CV5_25_UART_BASE 0x80
+#define CV5_25_UART_SPAN 32
+#define CV5_25_UART_END 0x9f
+#define CV5_25_UART_IRQ 3
+#define CV5_25_UART_BAUD 115200
+#define CV5_25_UART_DATA_BITS 8
+#define CV5_25_UART_FIXED_BAUD 1
+#define CV5_25_UART_FREQ 50000000
+#define CV5_25_UART_PARITY 'N'
+#define CV5_25_UART_SIM_CHAR_STREAM ""
+#define CV5_25_UART_SIM_TRUE_BAUD 0
+#define CV5_25_UART_STOP_BITS 1
+#define CV5_25_UART_SYNC_REG_DEPTH 2
+#define CV5_25_UART_USE_CTS_RTS 0
+#define CV5_25_UART_USE_EOP_REGISTER 0
+
 
 #endif /* _ALTERA_HPS_0_H_ */

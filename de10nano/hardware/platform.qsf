@@ -413,4 +413,12 @@ set_location_assignment PIN_D11 -to MM_SDA
 set_location_assignment PIN_E8 -to MM_SCL
 set_location_assignment PIN_AH14 -to MM_GND
 set_location_assignment PIN_AH13 -to MM_VCC
+set_location_assignment PIN_AD23 -to LORA_MOSI
+set_location_assignment PIN_AE23 -to LORA_MISO
+set_location_assignment PIN_D12 -to LORA_SCLK
+set_location_assignment PIN_C12 -to LORA_SSN
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LORA_MISO
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LORA_MOSI
+set_location_assignment PIN_AC22 -to IMU_RX
+set_location_assignment PIN_AC23 -to IMU_TX
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

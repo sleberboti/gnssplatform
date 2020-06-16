@@ -9,6 +9,27 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element CV5_25_uart
+   {
+      datum _sortIndex
+      {
+         value = "8";
+         type = "int";
+      }
+   }
+   element CV5_25_uart.s1
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "128";
+         type = "String";
+      }
+   }
    element clk_0
    {
       datum _sortIndex
@@ -130,6 +151,27 @@
          type = "String";
       }
    }
+   element sx_1272_spi
+   {
+      datum _sortIndex
+      {
+         value = "7";
+         type = "int";
+      }
+   }
+   element sx_1272_spi.spi_control_port
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "96";
+         type = "String";
+      }
+   }
    element time_sync_0
    {
       datum _sortIndex
@@ -203,8 +245,18 @@
  <interface name="hps_0_hps_io" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_0_uart1" internal="hps_0.uart1" />
  <interface
+   name="imu_uart"
+   internal="CV5_25_uart.external_connection"
+   type="conduit"
+   dir="end" />
+ <interface
    name="leds"
    internal="custom_leds_0.conduit_end"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="lora_spi"
+   internal="sx_1272_spi.external"
    type="conduit"
    dir="end" />
  <interface name="memory" internal="hps_0.memory" type="conduit" dir="end" />
@@ -221,6 +273,26 @@
    type="conduit"
    dir="end" />
  <interface name="ublox_i2c" internal="ublox_i2c.export" type="conduit" dir="end" />
+ <module
+   name="CV5_25_uart"
+   kind="altera_avalon_uart"
+   version="18.1"
+   enabled="1">
+  <parameter name="baud" value="115200" />
+  <parameter name="clockRate" value="50000000" />
+  <parameter name="dataBits" value="8" />
+  <parameter name="fixedBaud" value="true" />
+  <parameter name="parity" value="NONE" />
+  <parameter name="simCharStream" value="" />
+  <parameter name="simInteractiveInputEnable" value="false" />
+  <parameter name="simInteractiveOutputEnable" value="false" />
+  <parameter name="simTrueBaud" value="false" />
+  <parameter name="stopBits" value="1" />
+  <parameter name="syncRegDepth" value="2" />
+  <parameter name="useCtsRts" value="false" />
+  <parameter name="useEopRegister" value="false" />
+  <parameter name="useRelativePathForSimFile" value="false" />
+ </module>
  <module name="clk_0" kind="clock_source" version="18.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -777,6 +849,26 @@
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="4" />
  </module>
+ <module
+   name="sx_1272_spi"
+   kind="altera_avalon_spi"
+   version="18.1"
+   enabled="1">
+  <parameter name="avalonSpec" value="2.0" />
+  <parameter name="clockPhase" value="0" />
+  <parameter name="clockPolarity" value="0" />
+  <parameter name="dataWidth" value="8" />
+  <parameter name="disableAvalonFlowControl" value="false" />
+  <parameter name="inputClockRate" value="50000000" />
+  <parameter name="insertDelayBetweenSlaveSelectAndSClk" value="false" />
+  <parameter name="insertSync" value="false" />
+  <parameter name="lsbOrderedFirst" value="false" />
+  <parameter name="masterSPI" value="true" />
+  <parameter name="numberOfSlaves" value="1" />
+  <parameter name="syncRegDepth" value="2" />
+  <parameter name="targetClockRate" value="5000000" />
+  <parameter name="targetSlaveSelectToSClkDelay" value="0.0" />
+ </module>
  <module name="time_sync_0" kind="time_sync" version="1.0" enabled="1" />
  <module name="ublox_i2c" kind="i2c_opencores" version="12.0" enabled="1" />
  <connection
@@ -824,7 +916,27 @@
   <parameter name="baseAddress" value="0x0038" />
   <parameter name="defaultConnection" value="false" />
  </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="CV5_25_uart.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0080" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="sx_1272_spi.spi_control_port">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0060" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <connection kind="clock" version="18.1" start="clk_0.clk" end="switch.clk" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="sx_1272_spi.clk" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="CV5_25_uart.clk" />
  <connection
    kind="clock"
    version="18.1"
@@ -862,6 +974,20 @@
   <parameter name="irqNumber" value="1" />
  </connection>
  <connection
+   kind="interrupt"
+   version="18.1"
+   start="hps_0.f2h_irq0"
+   end="sx_1272_spi.irq">
+  <parameter name="irqNumber" value="2" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="hps_0.f2h_irq0"
+   end="CV5_25_uart.irq">
+  <parameter name="irqNumber" value="3" />
+ </connection>
+ <connection
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
@@ -886,6 +1012,16 @@
    version="18.1"
    start="clk_0.clk_reset"
    end="time_sync_0.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="sx_1272_spi.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="CV5_25_uart.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>

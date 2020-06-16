@@ -80,7 +80,19 @@ module platform(
 	 
 	 ////////// UBLOX ////////////////	
 	 output              UBLOX_SCL,
-	 inout					UBLOX_SDA
+	 inout					UBLOX_SDA,
+	 
+	 ////////// LORA /////////////////
+	 input					LORA_MISO,
+	 output					LORA_SSN,
+	 output					LORA_SCLK,
+	 output					LORA_MOSI,
+	 
+	 /////// 3DM-CV5-25 IMU ////////
+	 
+	 output	            IMU_TX,
+    input  				   IMU_RX
+	 
 );
 
 //=======================================================
@@ -159,8 +171,17 @@ soc_system u0(
 					
 					// UBLOX I2C
 					.ublox_i2c_scl_pad_io(UBLOX_SCL),
-					.ublox_i2c_sda_pad_io(UBLOX_SDA) 					
-						
+					.ublox_i2c_sda_pad_io(UBLOX_SDA),
+					
+					// LoRa SPI
+					.lora_spi_MISO (LORA_MISO),     //     lora_spi.MISO
+					.lora_spi_MOSI (LORA_MOSI),     //             .MOSI
+					.lora_spi_SCLK (LORA_SCLK),     //             .SCLK
+					.lora_spi_SS_n (LORA_SSN),
+					
+					// IMU UART
+					.imu_uart_rxd  (IMU_RX), //     imu_uart.rxd
+					.imu_uart_txd  (IMU_TX)					
            );
 
 endmodule
