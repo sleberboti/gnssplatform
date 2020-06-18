@@ -7,8 +7,8 @@ MM::MM(uint32_t ControllerAddr, uint8_t DeviceAddr)
 {
 	m_ControllerAddr = ControllerAddr;
 	devAddr = DeviceAddr;
-    printf("\t[UBLOX] ControllerAddress: %lx\n", m_ControllerAddr);
-    printf("\t[UBLOX] DeviceAddress: %lx\n", devAddr);
+    printf("\n\t[MM] ControllerAddress: %lx\n", (long unsigned int)m_ControllerAddr);
+    printf("\t[MM] DeviceAddress: %lx\n", (long unsigned int)devAddr);
 
     const int ref_clk = 50 * 1000 * 1000; // 50Mhz
     const int i2c_clk = 400 * 1000; // 400 Mhz works well

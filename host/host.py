@@ -24,9 +24,11 @@ if __name__ ==  '__main__':
     #ser.sendData("exit")
     ser.sendData("root")
     time.sleep(0.3)
-    ser.sendData("./hps")
-    time.sleep(0.3)
-    ser.sendData("switch")
+    ser.sendData("./platform")
+    time.sleep(3)
+    ser.sendData("|Host|imu_cv5|acc|gyro|tow||")
 
-    while True:
-        time.sleep(1)
+    time.sleep(3)
+    ser.sendData("\x03")
+    shared.stop_thread = True
+    ser.stop

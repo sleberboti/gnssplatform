@@ -6,16 +6,15 @@
 #include <linux/i2c-dev.h>
 #include <fcntl.h>
 
-
 #include <sys/mman.h>
 #include <sys/types.h>
 
 #include "hwlib.h"
 #include "socal/socal.h"
 #include "socal/hps.h"
-#include <iostream>
 
 // QSyS dependent address -- Copied from generated "hps_0.h"
+#define FPGA_IMU_UART_BASE         0x80    // 32 byte
 #define FPGA_MM_I2C_BASE           0x40    // 32 byte
 #define FPGA_TIME_BASE             0x38    // 8  byte
 #define FPGA_LED_PIO_BASE          0x30    // 8  byte
@@ -58,12 +57,15 @@ bool FPGA::Init()
 			m_ublox_i2c_base	  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_UBLOX_I2C_BASE)      & (unsigned long)(HW_REGS_MASK));
             m_time_base           =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_TIME_BASE)           & (unsigned long)(HW_REGS_MASK));
             m_mm_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MM_I2C_BASE)         & (unsigned long)(HW_REGS_MASK));
+            m_imu_uart_base		  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_IMU_UART_BASE) 	   & (unsigned long)(HW_REGS_MASK));
 
             bSuccess = true;
         }
         close(m_file_mem);
     }
-	printf("memory map success\n");
+	else{        
+        printf("memory mapping unsuccessfull\n");
+    }
 
     return bSuccess;
 }
@@ -122,6 +124,47 @@ bool FPGA::get_led_addr_base(uint32_t *addr)
         return false;    
 	*addr = (uint32_t)m_led_base;
 	return true;	
+}
+
+bool FPGA::get_imu_uart_addr_base(uint32_t *addr)
+{
+	if (!m_bInitSuccess)
+        return false;
+    
+	*addr = (uint32_t)m_imu_uart_base;
+	return true;	
+}
+
+bool FPGA::IMU_Uart_Read(uint32_t *imu_data)
+{	
+	uint32_t tmp;
+	
+	if (!m_bInitSuccess)
+        return false;
+	tmp = IORD(m_imu_uart_base,0);
+	*imu_data = tmp;
+	
+	return true;
+}
+
+bool FPGA::IMU_Uart_Write(char *string, int len)
+{
+	int i;
+	uint32_t temp;
+
+	if (!m_bInitSuccess)
+        return false;
+    //printf("uart write\n");
+	for(i=0; i<len; i++)
+	{
+		temp=IORD(m_imu_uart_base, 1);
+		temp=(temp>>16)&0xff;
+		if(temp>0)
+			IOWR(m_imu_uart_base, 0, string[i]);
+		else 
+			i--;
+	}
+	return true;
 }
 
 bool FPGA::release_mem()

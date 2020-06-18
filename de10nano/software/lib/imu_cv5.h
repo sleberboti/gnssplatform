@@ -12,12 +12,12 @@
 #include <inttypes.h>
 #include <iostream>
 #include <string> 
+#include "def.h"
 
 union IntFloat {
         uint32_t i;
         float f;
 };
-
 
 class IMU_CV5{
 private:
@@ -103,6 +103,7 @@ private:
     
     int len;
     union IntFloat val;    
+    sensorPacket packetNow;
 
 protected:
 	uint32_t m_ControllerAddr;
@@ -120,8 +121,8 @@ public:
     uint8_t * calcChecksum(uint8_t data[], int len);
     bool compareChecksum(uint8_t checksum[], uint8_t calced_checksum[]);
 
-    bool pollIMU();  
-    std::string parseIMUdata();
+    sensorPacket pollIMU();  
+    sensorPacket parseIMUdata();
     void bytesToFloat(uint32_t gyro_int[], uint32_t acc_int[]);
 
 };

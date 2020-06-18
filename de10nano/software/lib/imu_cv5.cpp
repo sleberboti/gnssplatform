@@ -30,11 +30,90 @@ IMU_CV5::~IMU_CV5()
 {
 }
 
-std::string IMU_CV5::parseIMUdata()
+sensorPacket IMU_CV5::parseIMUdata()
 {
     /* for (int i=0; i<28; i++){
         printf("%d: %x\n", i, globdata[i]);
     } */
+
+    // Big endian
+    acc_int[0] = globdata[2] << 24 | globdata[3] << 16 | globdata[4] << 8 | globdata[5];
+    acc_int[1] = globdata[6] << 24 | globdata[7] << 16 | globdata[8] << 8 | globdata[9];
+    acc_int[2] = globdata[10] << 24 | globdata[11] << 16 | globdata[12] << 8 | globdata[13];
+
+    gyro_int[0] = globdata[16] << 24 | globdata[17] << 16 | globdata[18] << 8 | globdata[19];
+    gyro_int[1] = globdata[20] << 24 | globdata[21] << 16 | globdata[22] << 8 | globdata[23];
+    gyro_int[2] = globdata[24] << 24 | globdata[25] << 16 | globdata[26] << 8 | globdata[27];
+
+    imu_string = "imu: ";    
+    imu_string += "acc: ";
+
+    bytesToFloat(acc_int, gyro_int);
+    //printf("IMU: ");
+    for (int i = 0; i < 3; i++){
+        //printf("%0.3f ", acc_float[i]);
+        imu_string+= std::to_string(acc_float[i]);
+        imu_string+= " ";
+        packetNow.acc[i]=acc_float[i];
+    }
+
+    imu_string += "gyro: ";
+    for (int i = 0; i < 3; i++){
+        //printf("%0.3f ", gyro_float[i]);
+        imu_string+= std::to_string(gyro_float[i]);
+        imu_string+= " ";
+        packetNow.gyro[i]=gyro_float[i];
+    }
+    //printf("\n");
+    
+    tow_int = globdata[36] << 56 |
+              globdata[35] << 48 |
+              globdata[34] << 40 |
+              globdata[33] << 32 |
+              globdata[32] << 24 |
+              globdata[31] << 16 |
+              globdata[30] <<  8 |
+              globdata[29];
+    
+    uint16_t week = globdata[38] << 8 | globdata[37];
+
+    uint16_t ts_flags[3];
+    for (int i=0; i<3; i++){
+        ts_flags[i] = globdata[39+i];
+    }    
+    //printf("\nTow2(uint64_t): %" PRIu64 "\n", tow2);
+    tow_double = static_cast<double>(tow_int);
+    packetNow.tow=tow_double;
+        
+    /* printf("Tow: %0.3f\n", tow_double);
+    printf("Week: %d\n", week);    
+    printf("TsFlags %d %d %d\n", ts_flags[0], ts_flags[1], ts_flags[2]); */
+    
+
+    std::string s;
+    tow_string = "tow: " + std::to_string(tow_double);
+    s = imu_string +  tow_string;
+
+    std::cout <<"String: " << s << std::endl;
+    printf("PARSEDATA\n");
+
+
+    
+    printf("Packetnow stuff: %0.3f %0.3f\n", acc_float[0],packetNow.acc[0]);
+
+    //packetNow.acc=;
+    //memcpy(acc_float, packetNow.acc, sizeof(acc_float));
+    //memcpy(gyro_float, packetNow.gyro, sizeof(gyro_float));
+
+
+    return packetNow;
+}
+
+/* std::string IMU_CV5::parseIMUdata()
+{
+    //for (int i=0; i<28; i++){
+    //    printf("%d: %x\n", i, globdata[i]);
+    //}
 
     // Big endian
     acc_int[0] = globdata[2] << 24 | globdata[3] << 16 | globdata[4] << 8 | globdata[5];
@@ -64,8 +143,6 @@ std::string IMU_CV5::parseIMUdata()
     }
     printf("\n");
     
-
-
     tow_int = globdata[36] << 56 |
               globdata[35] << 48 |
               globdata[34] << 40 |
@@ -94,19 +171,20 @@ std::string IMU_CV5::parseIMUdata()
 
     std::cout << s;
     return s;
-}
+} */
 
-bool IMU_CV5::pollIMU()
-{
+sensorPacket IMU_CV5::pollIMU()
+{   
     bool bSuccess = true;
 
-    printf("Polling IMU data\n");
+    //printf("Polling IMU data\n");
     len = sizeof(poll_imu_data) / sizeof(poll_imu_data[0]);
     bSuccess = send_imu_uart_data(poll_imu_data, len);
-
-    parseIMUdata();
-
-    return bSuccess;
+    if(bSuccess == false){
+        printf("Unsuccessful imu read\n");
+    }
+   
+    return parseIMUdata();
 }
 
 

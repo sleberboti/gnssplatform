@@ -8,8 +8,8 @@ UBLOX::UBLOX(uint32_t ControllerAddr, uint8_t DeviceAddr)
 {
 	m_ControllerAddr = ControllerAddr;
 	devAddr = DeviceAddr;
-    printf("\t[UBLOX] ControllerAddress: %lx\n", m_ControllerAddr);
-    printf("\t[UBLOX] DeviceAddress: %lx\n", devAddr);
+    printf("\n\t[UBLOX] ControllerAddress: %lx\n", (long unsigned int)m_ControllerAddr);
+    printf("\t[UBLOX] DeviceAddress: %lx\n", (long unsigned int)devAddr);
 
     const int ref_clk = 50 * 1000 * 1000; // 50Mhz
     const int i2c_clk = 100 * 1000; // 400KHz -- 100KHz works
@@ -39,8 +39,59 @@ bool UBLOX::calcChecksum(uint8_t messageBuffer[], int bufferSize){
     //printf("CalcChesum ended\n");
 }
 
+bool UBLOX::readLenght(){
+    bool bSuccess = true;
+    uint8_t data[2];
+    
+    bSuccess = readBytes(devAddr, 0xFD, 2, data);
+    if (bSuccess == false){
+        printf("Read error while reading 0xFD\n");
+    } 
+    else{
+        uint16_t length = (((uint16_t)data[0] << 8) + (uint16_t)data[1]);
+        printf("Lenght: %" PRIu16 "\n", length);        
+        printf("uBlox Length %5d %04X\n", length, length);
+    }
+
+    bSuccess = readBytes(devAddr, 0xFE, 2, data);
+    if (bSuccess == false){
+        printf("Read error while reading 0xFE\n");
+    } 
+    else{
+        uint16_t length = (((uint16_t)data[0] << 8) + (uint16_t)data[1]);
+        printf("Lenght: %" PRIu16 "\n", length);        
+        printf("uBlox Length %5d %04X\n", length, length);
+    }
+
+    return bSuccess;
+}
+
 bool UBLOX::getPVT(){
-    return true;
+    bool bSuccess=true;
+    uint8_t bufferAv[2];
+    //poll PVT message: B5 62 01 07 00 00 08 19
+    //uint8_t pvtPoll[8] = {0xB5, 0x62, 0x01, 0x07, 0x00, 0x00, 0x08, 0x19};
+    
+    /* for (int i=0; i<8; i++){
+        bSuccess = WriteReg (devAddr, 0xFF, pvtPoll[i]);
+        printf("%s\n", bSuccess ? "true" : "false");
+    } */
+    readBytes(devAddr, 0xFE, 2, bufferAv);
+    for (int i=0; i<2; i++){
+        printf("%x ", bufferAv[i]);
+    } 
+
+    printf("\n");
+    readBytes(devAddr, 0xFD, 2, bufferAv);
+    for (int i=0; i<2; i++){
+        printf("%x ", bufferAv[i]);
+    } 
+    //uint8_t dec =| bufferAv[0];
+    //printf("In decimal: %x", dec);
+    //uint32_t a = (one[0] << 24) | (one[1] << 16) | (one[2] << 8) | one[3];
+ 
+    printf("getPVT() done\n");
+    return bSuccess;
 }
 
 bool UBLOX::getUbloxBuffer(){
@@ -72,9 +123,9 @@ bool UBLOX::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){
     ack |= I2C_write(m_ControllerAddr, RegIndex, 0);
     ack |= I2C_write(m_ControllerAddr, RegValue, 1);
     if (ack != 0) {
-        #ifdef  I2C_DEBUG
-    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx, RegValue: %hhx\n", devAddr, RegIndex, RegValue);
-        #endif
+        //#ifdef  I2C_DEBUG
+    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx, RegValue: %hhx\n", (long unsigned int)devAddr, RegIndex, RegValue);
+        //#endif
     }
     return ((ack == I2C_ACK)? true: false);
 }

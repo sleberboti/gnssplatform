@@ -18,6 +18,9 @@ public:
     bool     get_led_addr_base(uint32_t *addr);
     bool     get_time_addr_base(uint32_t *addr);
     bool     get_mm_addr_base(uint32_t *addr);
+    bool     get_imu_uart_addr_base(uint32_t *addr);
+    bool     IMU_Uart_Read(uint32_t *imu_data);
+    bool     IMU_Uart_Write(char *string, int len);
 	bool     release_mem();
 
 protected:
@@ -30,6 +33,7 @@ protected:
 	uint8_t  *m_ublox_i2c_base;
     uint8_t  *m_time_base;
     uint8_t  *m_mm_i2c_base;
+    uint8_t  *m_imu_uart_base;
 	
     bool     Init();
 

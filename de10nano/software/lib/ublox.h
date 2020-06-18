@@ -9,6 +9,7 @@
 #include <unistd.h>  // usleep (unix standard?)
 #include <sys/types.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 
 class UBLOX {
@@ -35,6 +36,7 @@ public:
 	bool calcChecksum(uint8_t messageBuffer[], int bufferSize);
 	//bool processGPS(NAV_PVT pvt, uint8_t buffer_poll[100]);
 	bool getPVT();
+	bool readLenght();
 
 	void initialize();
 };

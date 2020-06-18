@@ -2,6 +2,8 @@ import threading
 import serial
 import shared
 from threading import Lock
+import re
+from database import DataBase
 
 stop_thread = False
 mutex = Lock()
@@ -28,7 +30,8 @@ class SerialWrapper:
         self.readingThread.start()
     
     def stop(self):
-        #self.sendData("\x03")
+        self.sendData("\x03")
+        self.sendData("\x03")
         self.sendData("exit")
         self.readingThread.join()
         self.ser.close()
@@ -39,10 +42,70 @@ class ReadLine(SerialWrapper, threading.Thread):
         self.buf = bytearray()
         self.s = s
         self.stop_thread = stop_thread
+        #self.string = str()
+
+    def parser(self, bitmessage):
+
+        gyro = []
+        acc = []
+
+        #print("parser running ")
+        #print(bitmessage)
+        message = str(bitmessage)
+        if message.find('DE10')!=-1:            
+            print(message)
+            sensorpos = message.find('name')+5
+            commapos = message.find(',')
+            sensorname = message[sensorpos:commapos]
+            message = message[commapos+1:] 
+
+            accpos = message.find('acc:')
+            message = message[accpos+4:]
+            for _ in range(3):
+                commapos = message.find(',')
+                acc.append(float(message[:commapos]))
+                message = message[commapos+1:]
+            gyropos = message.find('gyro:')
+            message = message[gyropos+5:]
+            for _ in range(3):
+                commapos = message.find(',')
+                gyro.append(float(message[:commapos]))
+                message = message[commapos+1:]            
+            towpos = message.find('tow:')
+            seppos = message.find("|")
+            tow = float(message[towpos+4:seppos-1])
+            
+            data = []
+            #for _ in range(3):
+            #    data.append([])
+
+            data.append(sensorname)
+            data.append(acc)
+            data.append(gyro)
+            data.append(tow)
+
+            DataBase(data)
+
+        
+        #print("PythonString:", self.string[12:], print(len(self.string)))
+        
+        #print(message[0], message[1], message[2])
+        #print(message[0:6])
+        #if message[0:6]==bytes(b'|DE10|'):
+        #    print(re.search(b'acc.|',message).group(0))
+        #    print("yay")
+            #bytes(b'|DE10|')
+            #bytes(b'acc:')
+            #bytes(b'gyro:')
+            #bytes(b'tow:')
+
+        #20
+
     
     def run(self):
-        while True:
-            print(self.readline())
+        while True:            
+            #print(self.readline())
+            self.parser(self.readline())
             if shared.stop_thread: 
                 break
 
