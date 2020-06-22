@@ -141,5 +141,29 @@
 #define CV5_25_UART_USE_CTS_RTS 0
 #define CV5_25_UART_USE_EOP_REGISTER 0
 
+/*
+ * Macros for device 'icm_i2c', class 'i2c_opencores'
+ * The macros are prefixed with 'ICM_I2C_'.
+ * The prefix is the slave descriptor.
+ */
+#define ICM_I2C_COMPONENT_TYPE i2c_opencores
+#define ICM_I2C_COMPONENT_NAME icm_i2c
+#define ICM_I2C_BASE 0xa0
+#define ICM_I2C_SPAN 32
+#define ICM_I2C_END 0xbf
+#define ICM_I2C_IRQ 4
+
+/*
+ * Macros for device 'ms_i2c', class 'i2c_opencores'
+ * The macros are prefixed with 'MS_I2C_'.
+ * The prefix is the slave descriptor.
+ */
+#define MS_I2C_COMPONENT_TYPE i2c_opencores
+#define MS_I2C_COMPONENT_NAME ms_i2c
+#define MS_I2C_BASE 0xc0
+#define MS_I2C_SPAN 32
+#define MS_I2C_END 0xdf
+#define MS_I2C_IRQ 5
+
 
 #endif /* _ALTERA_HPS_0_H_ */

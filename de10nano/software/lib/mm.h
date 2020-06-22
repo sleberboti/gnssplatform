@@ -9,6 +9,7 @@
 #include <unistd.h>  // usleep (unix standard?)
 #include <sys/types.h>
 #include <stdint.h>
+#include "def.h"
 
 #define mmDeviceID       0x00 // Device ID 
 #define mmInfo           0x01 // Information 
@@ -29,7 +30,9 @@ class MM {
 private:
 	uint8_t mmData[6];
 	uint8_t regValue[2];
-	uint8_t devAddr;    
+	uint8_t devAddr;  
+
+	sensorPacket packetNow;
 
 protected:
 	uint32_t m_ControllerAddr;
@@ -44,7 +47,8 @@ public:
 	MM(uint32_t ControllerAddr, uint8_t DeviceAddr = 0xE);
 	virtual ~MM();
 
-    uint8_t getMMdata();
+    sensorPacket getMMdata();
+	sensorPacket parseMMdata();
 	void initialize();
 };
 

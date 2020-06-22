@@ -24,45 +24,56 @@ void MM::initialize() {
     readBytes(devAddr, control1, 2, regValue); 
     printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
     #endif
-    //WriteReg (devAddr, control1, 0xB); // Continous measurement
-    WriteReg (devAddr, control1, 0x1);   // Single measurement
+
+    WriteReg (devAddr, control2, 0x6);
+    WriteReg (devAddr, control1, 0x6); 
+
     #ifdef  I2C_DEBUG
-    printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
     readBytes(devAddr, control1, 2, regValue);
     printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
     readBytes(devAddr, control2, 2, regValue); 
     printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
-    #endif
-    WriteReg (devAddr, control2, 0x6);
-    #ifdef  I2C_DEBUG
+
     printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
     readBytes(devAddr, control2, 2, regValue); 
     printf("\tRegValue: %x, %x \n", regValue[0], regValue[1]);
     #endif
 }
 
-uint8_t MM::getMMdata(){
+sensorPacket MM::parseMMdata(){
+    packetNow.sensorname = "mm";
+    packetNow.mm[0] = mmData[0];
+    packetNow.mm[1] = mmData[2];
+    packetNow.mm[2] = mmData[4];
+
+    return packetNow;
+}
+
+sensorPacket MM::getMMdata(){
     readBytes(devAddr, mmX1, 1, regValue);
     printf("MM registers:\n");
-    printf("\tX:  %x   ", regValue[0]);
+    printf("\tX:  %d ", regValue[0]);
     mmData[0] = regValue[0];
-    readBytes(devAddr, mmX2, 1, regValue);
-    printf("%x\n", regValue[0]);
-    mmData[0] = regValue[1];
+    /* readBytes(devAddr, mmX2, 1, regValue);
+    printf("%d %d\n", regValue[0], regValue[1]); */
+    mmData[1] = regValue[0];
     readBytes(devAddr, mmY1, 1, regValue);
-    printf("\tY:  %x   ", regValue[0]);
-    mmData[0] = regValue[2];
-    readBytes(devAddr, mmY2, 1, regValue);
-    printf("%x\n", regValue[0]);
-    mmData[0] = regValue[3];
+    printf("\tY:  %d   ", regValue[0]);
+    mmData[2] = regValue[0];
+    /* readBytes(devAddr, mmY2, 1, regValue);
+    printf("%d\n", regValue[0]);*/
+    mmData[3] = regValue[0]; 
     readBytes(devAddr, mmZ1, 1, regValue);
-    printf("\tZ:  %x   ", regValue[0]);
-    mmData[0] = regValue[4];
-    readBytes(devAddr, mmZ2, 1, regValue);
-    printf("%x\n", regValue[0]);
-    mmData[0] = regValue[5];
+    printf("\tZ:  %d   \n", regValue[0]);
+    mmData[4] = regValue[0];
+    /* readBytes(devAddr, mmZ2, 1, regValue);
+    printf("%d\n", regValue[0]); */
+    mmData[5] = regValue[0];
 
-    return mmData[6];
+    WriteReg (devAddr, control2, 0x6);
+    WriteReg (devAddr, control1, 0x6); 
+
+    return parseMMdata();
 }
 
 bool MM::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){
@@ -72,7 +83,7 @@ bool MM::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){
     ack |= I2C_write(m_ControllerAddr, RegValue, 1);
     if (ack != 0) {
         #ifdef  I2C_DEBUG
-    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx, RegValue: %hhx\n", devAddr, RegIndex, RegValue);
+    	    printf("\t[MM] DeviceAddress: %lx, RegIndex: %hhx, RegValue: %hhx\n", devAddr, RegIndex, RegValue);
         #endif
     }
     return ((ack == I2C_ACK)? true: false);
@@ -93,7 +104,7 @@ bool MM::readBytes(uint32_t devAddr, uint8_t RegIndex, uint16_t Len, uint8_t *pR
     }
     if (ack != 0) {
         #ifdef  I2C_DEBUG
-    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx\n", devAddr, RegIndex);
+    	    printf("\t[MM] DeviceAddress: %lx, RegIndex: %hhx\n", devAddr, RegIndex);
         #endif
     }
     return ((ack == I2C_ACK)? true: false);

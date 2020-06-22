@@ -77,6 +77,27 @@
          type = "boolean";
       }
    }
+   element icm_i2c
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+   }
+   element icm_i2c.avalon_slave_0
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "160";
+         type = "String";
+      }
+   }
    element magnetometer_i2c
    {
       datum _sortIndex
@@ -95,6 +116,27 @@
       datum baseAddress
       {
          value = "64";
+         type = "String";
+      }
+   }
+   element ms_i2c
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+   }
+   element ms_i2c.avalon_slave_0
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "192";
          type = "String";
       }
    }
@@ -244,6 +286,7 @@
  <interface name="hps_0_h2f_user0_clock" internal="hps_0.h2f_user0_clock" />
  <interface name="hps_0_hps_io" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_0_uart1" internal="hps_0.uart1" />
+ <interface name="icm_i2c" internal="icm_i2c.export" type="conduit" dir="end" />
  <interface
    name="imu_uart"
    internal="CV5_25_uart.external_connection"
@@ -265,6 +308,7 @@
    internal="magnetometer_i2c.export"
    type="conduit"
    dir="end" />
+ <interface name="ms_i2c" internal="ms_i2c.export" type="conduit" dir="end" />
  <interface name="pps" internal="time_sync_0.pps" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
  <interface
@@ -830,11 +874,13 @@
   <parameter name="usb_mp_clk_div" value="0" />
   <parameter name="use_default_mpu_clk" value="true" />
  </module>
+ <module name="icm_i2c" kind="i2c_opencores" version="12.0" enabled="1" />
  <module
    name="magnetometer_i2c"
    kind="i2c_opencores"
    version="12.0"
    enabled="1" />
+ <module name="ms_i2c" kind="i2c_opencores" version="12.0" enabled="1" />
  <module name="switch" kind="altera_avalon_pio" version="18.1" enabled="1">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
@@ -893,6 +939,24 @@
    kind="avalon"
    version="18.1"
    start="hps_0.h2f_lw_axi_master"
+   end="ms_i2c.avalon_slave_0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00c0" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="icm_i2c.avalon_slave_0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00a0" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="hps_0.h2f_lw_axi_master"
    end="custom_leds_0.s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0030" />
@@ -942,13 +1006,15 @@
    version="18.1"
    start="clk_0.clk"
    end="custom_leds_0.clock" />
- <connection kind="clock" version="18.1" start="clk_0.clk" end="ublox_i2c.clock" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="time_sync_0.clock" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="ublox_i2c.clock" />
  <connection
    kind="clock"
    version="18.1"
    start="clk_0.clk"
    end="magnetometer_i2c.clock" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="ms_i2c.clock" />
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="icm_i2c.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -977,6 +1043,20 @@
    kind="interrupt"
    version="18.1"
    start="hps_0.f2h_irq0"
+   end="ms_i2c.interrupt_sender">
+  <parameter name="irqNumber" value="5" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="hps_0.f2h_irq0"
+   end="icm_i2c.interrupt_sender">
+  <parameter name="irqNumber" value="4" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="18.1"
+   start="hps_0.f2h_irq0"
    end="sx_1272_spi.irq">
   <parameter name="irqNumber" value="2" />
  </connection>
@@ -991,12 +1071,22 @@
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
+   end="magnetometer_i2c.clock_reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
    end="ublox_i2c.clock_reset" />
  <connection
    kind="reset"
    version="18.1"
    start="clk_0.clk_reset"
-   end="magnetometer_i2c.clock_reset" />
+   end="ms_i2c.clock_reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="icm_i2c.clock_reset" />
  <connection
    kind="reset"
    version="18.1"

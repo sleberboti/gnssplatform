@@ -14,6 +14,8 @@
 #include "socal/hps.h"
 
 // QSyS dependent address -- Copied from generated "hps_0.h"
+#define FPGA_MS_I2C_BASE           0xc0    // 32 byte
+#define FPGA_ICM_I2C_BASE          0xa0    // 32 byte
 #define FPGA_IMU_UART_BASE         0x80    // 32 byte
 #define FPGA_MM_I2C_BASE           0x40    // 32 byte
 #define FPGA_TIME_BASE             0x38    // 8  byte
@@ -58,6 +60,8 @@ bool FPGA::Init()
             m_time_base           =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_TIME_BASE)           & (unsigned long)(HW_REGS_MASK));
             m_mm_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MM_I2C_BASE)         & (unsigned long)(HW_REGS_MASK));
             m_imu_uart_base		  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_IMU_UART_BASE) 	   & (unsigned long)(HW_REGS_MASK));
+            m_ms_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MS_I2C_BASE) 	       & (unsigned long)(HW_REGS_MASK));
+            m_icm_i2c_base        =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MS_I2C_BASE) 	       & (unsigned long)(HW_REGS_MASK));
 
             bSuccess = true;
         }
@@ -107,6 +111,22 @@ bool FPGA::get_mm_addr_base(uint32_t *addr)
 	if (!m_bInitSuccess)
         return false;    
 	*addr = (uint32_t)m_mm_i2c_base;
+	return true;	
+}
+
+bool FPGA::get_ms_addr_base(uint32_t *addr)
+{
+	if (!m_bInitSuccess)
+        return false;    
+	*addr = (uint32_t)m_ms_i2c_base;
+	return true;	
+}
+
+bool FPGA::get_icm_addr_base(uint32_t *addr)
+{
+	if (!m_bInitSuccess)
+        return false;    
+	*addr = (uint32_t)m_icm_i2c_base;
 	return true;	
 }
 

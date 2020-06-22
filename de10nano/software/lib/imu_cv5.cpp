@@ -51,17 +51,12 @@ sensorPacket IMU_CV5::parseIMUdata()
     bytesToFloat(acc_int, gyro_int);
     //printf("IMU: ");
     for (int i = 0; i < 3; i++){
-        //printf("%0.3f ", acc_float[i]);
-        imu_string+= std::to_string(acc_float[i]);
-        imu_string+= " ";
         packetNow.acc[i]=acc_float[i];
     }
 
     imu_string += "gyro: ";
     for (int i = 0; i < 3; i++){
         //printf("%0.3f ", gyro_float[i]);
-        imu_string+= std::to_string(gyro_float[i]);
-        imu_string+= " ";
         packetNow.gyro[i]=gyro_float[i];
     }
     //printf("\n");
@@ -77,10 +72,11 @@ sensorPacket IMU_CV5::parseIMUdata()
     
     uint16_t week = globdata[38] << 8 | globdata[37];
 
-    uint16_t ts_flags[3];
+    /* uint16_t ts_flags[3];
     for (int i=0; i<3; i++){
         ts_flags[i] = globdata[39+i];
-    }    
+    }  */
+
     //printf("\nTow2(uint64_t): %" PRIu64 "\n", tow2);
     tow_double = static_cast<double>(tow_int);
     packetNow.tow=tow_double;
@@ -88,24 +84,12 @@ sensorPacket IMU_CV5::parseIMUdata()
     /* printf("Tow: %0.3f\n", tow_double);
     printf("Week: %d\n", week);    
     printf("TsFlags %d %d %d\n", ts_flags[0], ts_flags[1], ts_flags[2]); */
-    
-
-    std::string s;
-    tow_string = "tow: " + std::to_string(tow_double);
-    s = imu_string +  tow_string;
-
-    std::cout <<"String: " << s << std::endl;
-    printf("PARSEDATA\n");
-
-
-    
-    printf("Packetnow stuff: %0.3f %0.3f\n", acc_float[0],packetNow.acc[0]);
 
     //packetNow.acc=;
     //memcpy(acc_float, packetNow.acc, sizeof(acc_float));
     //memcpy(gyro_float, packetNow.gyro, sizeof(gyro_float));
 
-
+    packetNow.sensorname = "imu_cv5";
     return packetNow;
 }
 

@@ -3,6 +3,7 @@
 #include <iostream>
 
 //#define I2C_DEBUG
+//#define UBLOX_DEBUG
 
 UBLOX::UBLOX(uint32_t ControllerAddr, uint8_t DeviceAddr)
 {
@@ -21,14 +22,18 @@ UBLOX::~UBLOX() {
 }
 
 bool UBLOX::calcChecksum(uint8_t messageBuffer[], int bufferSize){
-
+    /* printf("calcChecksum:\n");
+    for (int i=0; i< bufferSize-2; i++){
+        printf("%x ", messageBuffer[i]);
+    } */
     uint8_t CK_A = 0;
     uint8_t CK_B = 0;
     //printf("CalcChesum started\n");
-    for(int i=2; i<bufferSize-2; i++){
+    for(int i=0; i<bufferSize-2; i++){ // was buffersize-2
         CK_A = CK_A + messageBuffer[i];
         CK_B = CK_B + CK_A;
     }
+    //printf("\nCalced Cs: %x %x\n", CK_A, CK_B);
 
     if(CK_A == messageBuffer[bufferSize-2] and CK_B == messageBuffer[bufferSize-1]){
         return true;
@@ -36,85 +41,147 @@ bool UBLOX::calcChecksum(uint8_t messageBuffer[], int bufferSize){
     else{
         return false;
     }
-    //printf("CalcChesum ended\n");
+    printf("CalcChesum ended\n");
 }
 
-bool UBLOX::readLenght(){
-    bool bSuccess = true;
-    uint8_t data[2];
-    
-    bSuccess = readBytes(devAddr, 0xFD, 2, data);
-    if (bSuccess == false){
-        printf("Read error while reading 0xFD\n");
-    } 
-    else{
-        uint16_t length = (((uint16_t)data[0] << 8) + (uint16_t)data[1]);
-        printf("Lenght: %" PRIu16 "\n", length);        
-        printf("uBlox Length %5d %04X\n", length, length);
-    }
+sensorPacket UBLOX::reportPVT(){
+    packetNow.sensorname = "ublox_pvt";
+    packetNow.iTOW = validPacket.iTOW;    
+    packetNow.year = validPacket.year;
+    packetNow.month = validPacket.month;
+    packetNow.day = validPacket.day;
+    packetNow.hour = validPacket.hour;
+    packetNow.min = validPacket.min;
+    packetNow.sec = validPacket.sec;
+    packetNow.valid = validPacket.valid;
+    packetNow.tAcc = validPacket.valid;
+    packetNow.nano = validPacket.valid;
+    packetNow.fixType = validPacket.valid;
+    packetNow.flags = validPacket.flags;
+    packetNow.flags2 = validPacket.flags2;
+    packetNow.numSV = validPacket.numSV;
+    packetNow.lat = (double)validPacket.lat*1e-7;
+    packetNow.lon = (double)validPacket.lon*1e-7;
+    packetNow.height = (double)validPacket.height;
+    packetNow.hMSL = (double)validPacket.hMSL;
+    packetNow.hAcc = (double)validPacket.hAcc;
+    packetNow.vAcc = (double)validPacket.vAcc;
+    packetNow.velN = (double)validPacket.velN;
+    packetNow.velE = (double)validPacket.velE;
+    packetNow.velD = (double)validPacket.velD;
+    packetNow.gSpeed = (double)validPacket.gSpeed;
+    packetNow.headMot = (double)validPacket.headMot*1e-5;
+    packetNow.sAcc = (double)validPacket.sAcc;
+    packetNow.headAcc = (double)validPacket.headAcc*1e-5;
+    packetNow.pDOP = (float)validPacket.pDOP*1e-2;
+    packetNow.headVeh = (double)validPacket.headVeh*1e-5;
+    packetNow.magDec = (float)validPacket.magDec*1e-2;
+    packetNow.magAcc = (float)validPacket.magAcc*1e-2;
 
-    bSuccess = readBytes(devAddr, 0xFE, 2, data);
-    if (bSuccess == false){
-        printf("Read error while reading 0xFE\n");
-    } 
-    else{
-        uint16_t length = (((uint16_t)data[0] << 8) + (uint16_t)data[1]);
-        printf("Lenght: %" PRIu16 "\n", length);        
-        printf("uBlox Length %5d %04X\n", length, length);
-    }
+    #ifdef UBLOX_DEBUG
+    printf("msg_class:%d\n",validPacket.msg_class);
+    printf("id:%d\n",validPacket.msg_id);
+    printf("msg_lenght:%d\n",validPacket.msg_length);
+    printf("iTOW:%d\n",validPacket.iTOW);    
+    printf("year:%d\n",validPacket.year);
+    printf("month:%d\n",validPacket.month);
+    printf("day:%d\n",validPacket.day);
+    printf("hour:%d\n",validPacket.hour);
+    printf("min:%d\n",validPacket.min);                    
+    printf("sec:%d\n",validPacket.sec);
+    printf("valid:%d\n",validPacket.valid);
+    printf("validDate:%d\n",(validPacket.valid & 0x01));
+    printf("validTime:%d\n",(validPacket.valid & 0x02));  
+    printf("isTimeFullyResolved:%d\n",(validPacket.valid & 0x04));
+    printf("isMagneticDeclinationValid:%d\n",(validPacket.valid & 0x08));
+    printf("tAcc:%d\n",validPacket.tAcc); 
+    printf("nano:%d\n",validPacket.nano); 
+    printf("fixType:%d\n",(FixType)validPacket.fixType); 
+    printf("flags1:%d\n",validPacket.flags);
+    printf("PowerSaveMode:%d\n",(PowerSaveMode)((validPacket.flags >> 2) & 0x07));
+    printf("CarrierPhaseStatus:%d\n",(CarrierPhaseStatus)((validPacket.flags >> 6) & 0x03));
+    printf("isGnssFixOk:%d\n",(validPacket.flags & 0x01));
+    printf("isDiffCorrApplied:%d\n",(validPacket.flags & 0x02));
+    printf("isHeadingValid:%d\n",(validPacket.flags & 0x20));
+    printf("isConfirmedDate:%d\n",(validPacket.flags & 0x40));
+    printf("isConfirmedTime:%d\n",(validPacket.flags & 0x80));
+    printf("flags2:%d\n",validPacket.flags2);
+    printf("isTimeDateConfirmationAvail:%d\n",(validPacket.flags2 & 0x20));
+    printf("numSV:%d\n",validPacket.numSV); 
+    printf("lat:%f\n",(double)validPacket.lat*1e-7);
+    printf("lon:%f\n",(double)validPacket.lon*1e-7);
+    printf("height:%f\n",(double)validPacket.height); 
+    printf("hMSL:%f\n",(double)validPacket.hMSL); 
+    printf("hAcc:%f\n",(double)validPacket.hAcc); 
+    printf("vAcc:%f\n",(double)validPacket.vAcc); 
+    printf("velN:%f\n",(double)validPacket.velN); 
+    printf("velE:%f\n",(double)validPacket.velE); 
+    printf("velD:%f\n",(double)validPacket.velD); 
+    printf("gSpeed:%f\n",(double)validPacket.gSpeed); 
+    printf("headMot:%f\n",(double)validPacket.headMot*1e-5); 
+    printf("sAcc:%f\n",(double)validPacket.sAcc); 
+    printf("headAcc:%f\n",(double)validPacket.headAcc*1e-5); 
+    printf("pDop:%f\n",(float)validPacket.pDOP*1e-2);
+    printf("headVeh:%f\n",(double)validPacket.headVeh*1e-5);
+    printf("magDec:%f\n",(float)validPacket.magDec*1e-2);
+    printf("magAcc:%f\n",(float)validPacket.magAcc*1e-2);
+    #endif
 
-    return bSuccess;
+    return packetNow;
 }
 
-bool UBLOX::getPVT(){
-    bool bSuccess=true;
-    uint8_t bufferAv[2];
-    //poll PVT message: B5 62 01 07 00 00 08 19
-    //uint8_t pvtPoll[8] = {0xB5, 0x62, 0x01, 0x07, 0x00, 0x00, 0x08, 0x19};
-    
-    /* for (int i=0; i<8; i++){
-        bSuccess = WriteReg (devAddr, 0xFF, pvtPoll[i]);
-        printf("%s\n", bSuccess ? "true" : "false");
-    } */
-    readBytes(devAddr, 0xFE, 2, bufferAv);
-    for (int i=0; i<2; i++){
-        printf("%x ", bufferAv[i]);
-    } 
+sensorPacket UBLOX::getUbloxBuffer(){
+    // GETTING PVT FROM BUFFER
+    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);    
 
-    printf("\n");
-    readBytes(devAddr, 0xFD, 2, bufferAv);
-    for (int i=0; i<2; i++){
-        printf("%x ", bufferAv[i]);
-    } 
-    //uint8_t dec =| bufferAv[0];
-    //printf("In decimal: %x", dec);
-    //uint32_t a = (one[0] << 24) | (one[1] << 16) | (one[2] << 8) | one[3];
- 
-    printf("getPVT() done\n");
-    return bSuccess;
-}
-
-bool UBLOX::getUbloxBuffer(){
-
-    bool checkSum = false;
-    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);
-    
-    while (!checkSum){
+    /* while (!checkSum){
         readBytes(devAddr, 0xff, bufferSize, buffer); 
-        /* printf("Buffer: ");
-        for (int i=0; i<bufferSize; i++){
-            printf("%x ", buffer[i]);
-        } */    
+        //printf("Buffer: ");
+        //for (int i=0; i<bufferSize; i++){
+        //    printf("%x ", buffer[i]);
+        //}
         checkSum = calcChecksum(buffer, bufferSize);
-    }
-
-    printf("Buffer: ");
-    for (int i=0; i<bufferSize; i++){
-        printf("%x ", buffer[i]);
-    }
-    printf("\n");
+    } */
     
-    return true;
+    checksum = false;
+    while(!checksum){
+        //printf("Buffer: ");
+        readBytes(devAddr, 0xff, bufferSize, buffer); 
+        for (int i=0; i<bufferSize; i++){
+            //printf("%x ", buffer[i]);
+            if (buffer[i]==ubxHeader[0] && buffer[i+1]==ubxHeader[1]){
+                if (buffer[i+2]==ubxNavPvt_msgClass && buffer[i+3]==ubxNavPvt_msgId){
+                    printf("PVT packet found\n");
+                    for (int j=0; j<ubxNavPvt_msgLen; j++){
+                        byte = buffer[i+2+j];
+                        printf("%x ", byte);
+                        *((uint8_t *) &tempPacket+j) = byte;
+                        ubxNavPvt_buffer[j] = byte;
+                    }
+                    ubxNavPvt_buffer[ubxNavPvt_msgLen]= buffer[i+2+ubxNavPvt_msgLen];
+                    ubxNavPvt_buffer[ubxNavPvt_msgLen+1]= buffer[i+2+ubxNavPvt_msgLen+1];
+
+                    //printf("\n Cs data: %x %x\n", ubxNavPvt_buffer[ubxNavPvt_msgLen], ubxNavPvt_buffer[ubxNavPvt_msgLen+1]); //checksums
+                    checksum = calcChecksum(ubxNavPvt_buffer, ubxNavPvt_msgLen+2);
+                    if (checksum){
+                        validPacket = tempPacket;
+                        return reportPVT();
+                        break;
+                    }
+                    //printf("Cs result: %d\n\n", cs);                    
+
+                }
+                if (buffer[i+2]==rawx_sop[0] && buffer[i+3]==rawx_sop[1]){
+                    printf("RAWX packet found\n");
+                    /* for (int j=0; j<rawSize; j++){
+                        bufferPVT[j] = buffer[i];
+                    } */
+                }
+            }
+        }
+        //printf("\n");
+    } 
+    return packetNow; // was commented
 }
 
 bool UBLOX::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){
@@ -145,7 +212,7 @@ bool UBLOX::readBytes(uint32_t devAddr, uint8_t RegIndex, uint16_t Len, uint8_t 
     }
     if (ack != 0) {
         #ifdef  I2C_DEBUG
-    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx\n", devAddr, RegIndex);
+    	    printf("\t[UBLOX] DeviceAddress: %lx, RegIndex: %hhx\n", (long unsigned int)devAddr, RegIndex);
         #endif
     }
     return ((ack == I2C_ACK)? true: false);

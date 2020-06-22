@@ -14,6 +14,8 @@ public:
     bool     LedSet(int mask);
 	bool     SwitchRead(uint32_t *mask);
     uint32_t TimeRead();
+    bool     get_icm_addr_base(uint32_t *addr);
+    bool     get_ms_addr_base(uint32_t *addr);
 	bool     get_ublox_addr_base(uint32_t *addr);
     bool     get_led_addr_base(uint32_t *addr);
     bool     get_time_addr_base(uint32_t *addr);
@@ -33,6 +35,8 @@ protected:
 	uint8_t  *m_ublox_i2c_base;
     uint8_t  *m_time_base;
     uint8_t  *m_mm_i2c_base;
+    uint8_t  *m_ms_i2c_base;
+    uint8_t  *m_icm_i2c_base;
     uint8_t  *m_imu_uart_base;
 	
     bool     Init();

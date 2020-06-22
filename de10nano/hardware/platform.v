@@ -82,6 +82,18 @@ module platform(
 	 output              UBLOX_SCL,
 	 inout					UBLOX_SDA,
 	 
+	 ////////// ICM IMU ////////////////	
+	 output              ICM_VCC,
+	 output              ICM_GND, 
+	 output              ICM_SCL,
+	 inout					ICM_SDA,
+	 
+	 ////////// MS ALTITUDE ////////////	
+	 output              MS_VCC,
+	 output              MS_GND, 
+	 output              MS_SCL,
+	 inout					MS_SDA,
+	 
 	 ////////// LORA /////////////////
 	 input					LORA_MISO,
 	 output					LORA_SSN,
@@ -105,6 +117,12 @@ assign uart0_tx = 1'b1;
 
 assign MM_VCC = 1'b1;
 assign MM_GND = 1'b0;
+
+assign MS_VCC = 1'b1;
+assign MS_GND = 1'b0;
+
+assign ICM_VCC = 1'b1;
+assign ICM_GND = 1'b0;
 
 //=======================================================
 //  Structural coding
@@ -181,7 +199,15 @@ soc_system u0(
 					
 					// IMU UART
 					.imu_uart_rxd  (IMU_RX), //     imu_uart.rxd
-					.imu_uart_txd  (IMU_TX)					
+					.imu_uart_txd  (IMU_TX),
+					
+					// MS I2C	
+					.ms_i2c_scl_pad_io (MS_SCL), //       ms_i2c.scl_pad_io
+					.ms_i2c_sda_pad_io (MS_SDA),
+					
+					// ICM I2C	
+					.icm_i2c_scl_pad_io (ICM_SCL), //       icm_i2c.scl_pad_io
+					.icm_i2c_sda_pad_io (ICM_SDA)
            );
 
 endmodule

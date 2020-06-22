@@ -45,46 +45,94 @@ class ReadLine(SerialWrapper, threading.Thread):
         #self.string = str()
 
     def parser(self, bitmessage):
-
-        gyro = []
-        acc = []
-
+        data = []
         #print("parser running ")
-        #print(bitmessage)
+        print(bitmessage)
         message = str(bitmessage)
         if message.find('DE10')!=-1:            
             print(message)
             sensorpos = message.find('name')+5
             commapos = message.find(',')
             sensorname = message[sensorpos:commapos]
-            message = message[commapos+1:] 
+            message = message[commapos+1:]
 
-            accpos = message.find('acc:')
-            message = message[accpos+4:]
-            for _ in range(3):
-                commapos = message.find(',')
-                acc.append(float(message[:commapos]))
-                message = message[commapos+1:]
-            gyropos = message.find('gyro:')
-            message = message[gyropos+5:]
-            for _ in range(3):
-                commapos = message.find(',')
-                gyro.append(float(message[:commapos]))
-                message = message[commapos+1:]            
-            towpos = message.find('tow:')
-            seppos = message.find("|")
-            tow = float(message[towpos+4:seppos-1])
+            if sensorname == 'imu_cv5':                 
+                gyro = []
+                acc = []
+                accpos = message.find('acc:')
+                message = message[accpos+4:]
+                for _ in range(3):
+                    commapos = message.find(',')
+                    acc.append(float(message[:commapos]))
+                    message = message[commapos+1:]
+                gyropos = message.find('gyro:')
+                message = message[gyropos+5:]
+                for _ in range(3):
+                    commapos = message.find(',')
+                    gyro.append(float(message[:commapos]))
+                    message = message[commapos+1:]            
+                towpos = message.find('tow:')
+                seppos = message.find("|")
+                tow = float(message[towpos+4:seppos-1])
+
+                #for _ in range(3):
+                #    data.append([])
+
+                data.append(sensorname)
+                data.append(acc)
+                data.append(gyro)
+                data.append(tow)
             
-            data = []
-            #for _ in range(3):
-            #    data.append([])
+            if sensorname == 'mm': 
+                mm = []
+                xpos = message.find('x:')                
+                message = message[xpos+2:]
+                commapos = message.find(',')
+                mm.append(message[:commapos-1])
 
-            data.append(sensorname)
-            data.append(acc)
-            data.append(gyro)
-            data.append(tow)
+                ypos = message.find('y:') 
+                message = message[ypos+2:]
+                commapos = message.find(',')                
+                mm.append(message[:commapos-1])
+
+                zpos = message.find('z:') 
+                message = message[zpos+2:]
+                commapos = message.find('|') 
+                mm.append(message[:commapos-1])
+
+                data.append(sensorname)
+                data.append(mm)
+                print(" ")
+            
+            if sensorname == 'ublox_pvt':
+                pvt = []
+                numOfFields = 31
+                for _ in range (numOfFields):
+                    #print(message)
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                    
+                    pvt.append(message[colonpos+1:commapos-1])
+                    message = message[commapos+1:]
+
+                print(pvt)
+                data.append(sensorname)
+                data.append(pvt)
+
+            if sensorname == 'ms':
+                ms = []
+                numOfFields = 2
+                for _ in range (numOfFields):
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                 
+                    ms.append(message[colonpos+1:commapos])
+                    message = message[commapos+1:]
+
+                print(ms)
+                data.append(sensorname)
+                data.append(ms)
 
             DataBase(data)
+
 
         
         #print("PythonString:", self.string[12:], print(len(self.string)))
