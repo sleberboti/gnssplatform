@@ -130,25 +130,21 @@ class ReadLine(SerialWrapper, threading.Thread):
                 print(ms)
                 data.append(sensorname)
                 data.append(ms)
+            
+            if sensorname == 'imu_icm':
+                imu_icm = []
+                numOfFields = 10
+                for _ in range (numOfFields):
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                 
+                    imu_icm.append(message[colonpos+1:commapos])
+                    message = message[commapos+1:]
+
+                print(imu_icm)
+                data.append(sensorname)
+                data.append(imu_icm)
 
             DataBase(data)
-
-
-        
-        #print("PythonString:", self.string[12:], print(len(self.string)))
-        
-        #print(message[0], message[1], message[2])
-        #print(message[0:6])
-        #if message[0:6]==bytes(b'|DE10|'):
-        #    print(re.search(b'acc.|',message).group(0))
-        #    print("yay")
-            #bytes(b'|DE10|')
-            #bytes(b'acc:')
-            #bytes(b'gyro:')
-            #bytes(b'tow:')
-
-        #20
-
     
     def run(self):
         while True:            

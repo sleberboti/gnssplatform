@@ -47,8 +47,8 @@ public:
 	MM(uint32_t ControllerAddr, uint8_t DeviceAddr = 0xE);
 	virtual ~MM();
 
-    sensorPacket getMMdata();
-	sensorPacket parseMMdata();
+    sensorPacket getMMdata(uint32_t globitow);
+	sensorPacket parseMMdata(uint32_t globitow);
 	void initialize();
 };
 

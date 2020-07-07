@@ -61,7 +61,7 @@ bool FPGA::Init()
             m_mm_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MM_I2C_BASE)         & (unsigned long)(HW_REGS_MASK));
             m_imu_uart_base		  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_IMU_UART_BASE) 	   & (unsigned long)(HW_REGS_MASK));
             m_ms_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MS_I2C_BASE) 	       & (unsigned long)(HW_REGS_MASK));
-            m_icm_i2c_base        =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MS_I2C_BASE) 	       & (unsigned long)(HW_REGS_MASK));
+            m_icm_i2c_base        =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_ICM_I2C_BASE)        & (unsigned long)(HW_REGS_MASK));
 
             bSuccess = true;
         }
@@ -95,7 +95,14 @@ uint32_t FPGA::TimeRead(){
         return false;
     uint32_t *counter;
     *counter = IORD(m_time_base,0);
-    return *counter;
+    uint32_t subsec ;
+    // subsec = *counter/5000000; // deci second
+    // subsec = *counter/500000; // centi second
+    // subsec = *counter/50000; // milli second
+    // subsec = *counter/50; // micro second
+    subsec = *counter/5; // micro tenth 
+    //printf("FPGA::TimeRead(): %x | %Lf\n", *counter, double(subsec));
+    return subsec;
 }
 
 bool FPGA::get_ublox_addr_base(uint32_t *addr)

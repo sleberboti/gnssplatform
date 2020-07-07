@@ -25,13 +25,14 @@ if __name__ ==  '__main__':
     ser.sendData("root")
     time.sleep(0.3)
     ser.sendData("./platform host")
-    time.sleep(3)
+    time.sleep(5)
 
-    for _ in range(1):
-        #ser.sendData("|Host|imu_cv5|acc|gyro|tow||")
+    for _ in range(3):
+        ser.sendData("|Host|imu_cv5|acc|gyro|tow||")
         #ser.sendData("|Host|mm|mmdata||")
-        #ser.sendData("|Host|ublox|pvt||")
-        ser.sendData("|Host|ms|msdata||")
+        ser.sendData("|Host|ublox|pvt||")
+        #ser.sendData("|Host|ms|msdata||")
+        #ser.sendData("|Host|imu_icm|acc|gyro|mm|temp||")
         time.sleep(1)
     
     ser.sendData("killthread")

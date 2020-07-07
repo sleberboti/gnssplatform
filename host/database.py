@@ -30,6 +30,25 @@ class DataBase:
                     }
                 }
             ]
+        if (self.data[0]=="imu_icm"):
+            json_body = [
+                {
+                    "measurement": self.data[0],
+                    #"time": self.data[2], #tow
+                    "fields": {
+                        "accel_xout": self.data[1][0],
+                        "accel_yout": self.data[1][1],
+                        "accel_zout": self.data[1][2],
+                        "gyro_xout":  self.data[1][3],
+                        "gyro_yout":  self.data[1][4],
+                        "gyro_zout":  self.data[1][5],
+                        "mm_xout":    self.data[1][6],
+                        "mm_yout":    self.data[1][7],
+                        "mm_zout":    self.data[1][8],
+                        "temp_out":   self.data[1][9]
+                    }
+                }
+            ]
         if (self.data[0]=="mm"):
             json_body = [
                 {

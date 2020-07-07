@@ -19,6 +19,11 @@ union IntFloat {
         float f;
 };
 
+union hextodouble{
+    double d;
+    unsigned long long ull;
+  };
+
 class IMU_CV5{
 private:
     uint32_t gyro_int[3];    
@@ -37,11 +42,17 @@ private:
     // global variable for checksum
     uint8_t globCs[2];      
     uint8_t globdata[100]; // global data 
-    
-        
-    uint8_t idle_mode[8] = {0x75, 0x65, 0x01, 0x02, 0x02, 0x02, 0xE1, 0xC7};
-    uint8_t reset[8]     = {0x75, 0x65, 0x01, 0x02, 0x02, 0x7E, 0x5D, 0x43}; 
-    uint8_t resume[8]    = {0x75, 0x65, 0x01, 0x02, 0x02, 0x06, 0xE5, 0xCB};
+
+    //                                        for applying secs    0x01  0x02
+    //                                        for reading secs     0x02  0x02
+    //                                                            apply  week  time  time  time  time  cs1   cs2
+    uint8_t time_update[14] = {0x75, 0x65, 0x01, 0x08, 0x08, 0x72, 0x01, 0x02, 0x10, 0x05, 0x06, 0x98, 0xfd, 0x32};
+    uint8_t week_update[14] = {0x75, 0x65, 0x01, 0x08, 0x08, 0x72, 0x01, 0x01, 0x05, 0x05, 0x05, 0x05, 0xfd, 0x32};
+    uint8_t read_time  [14] = {0x75, 0x65, 0x01, 0x08, 0x08, 0x72, 0x02, 0x02, 0x00, 0x00, 0x06, 0x98, 0xfd, 0x32};
+    uint8_t read_week  [14] = {0x75, 0x65, 0x01, 0x08, 0x08, 0x72, 0x02, 0x01, 0x00, 0x00, 0x06, 0x98, 0xfd, 0x32};
+    uint8_t idle_mode[8]    = {0x75, 0x65, 0x01, 0x02, 0x02, 0x02, 0xE1, 0xC7};
+    uint8_t reset[8]        = {0x75, 0x65, 0x01, 0x02, 0x02, 0x7E, 0x5D, 0x43}; 
+    uint8_t resume[8]       = {0x75, 0x65, 0x01, 0x02, 0x02, 0x06, 0xE5, 0xCB};
 
     uint8_t config_baudrate9600[13]   = {0x75, 0x65, 0x0C, 0x07, 0x07, 0x40, 0x01, 0x00, 0x00, 0x25, 0x80, 0x49, 0x09};
     uint8_t config_baudrate115200[13] = {0x75, 0x65, 0x0C, 0x07, 0x07, 0x40, 0x01, 0x00, 0x01, 0xC2, 0x00, 0xF8, 0xDA}; // 115200
@@ -103,6 +114,7 @@ private:
     
     int len;
     union IntFloat val;    
+    union hextodouble convert;
     sensorPacket packetNow;
 
 protected:
@@ -114,17 +126,22 @@ public:
 	virtual ~IMU_CV5();
 
     bool streamConfig();
+    bool setToIdle();
     void get_imu_uart_data();
-    bool send_imu_uart_data(uint8_t command[], int len);
+    bool send_imu_uart_data(uint8_t command[], int len, uint8_t exp_payload=0);
     bool IMU_Uart_Write(uint8_t command[], int len);
-    bool IMU_Uart_Read();
+    bool IMU_Uart_Read(uint8_t exp_payload=0);
     uint8_t * calcChecksum(uint8_t data[], int len);
     bool compareChecksum(uint8_t checksum[], uint8_t calced_checksum[]);
 
     sensorPacket pollIMU();  
     sensorPacket parseIMUdata();
+    bool updateGPStime(uint32_t iTow);
+    bool updateGPSweek(uint32_t iTow);
+    bool readGPStime();
+    bool readGPSweek();
     void bytesToFloat(uint32_t gyro_int[], uint32_t acc_int[]);
-
+    //void u8from32 (uint8_t b[4], uint32_t u32);
 };
 
 #endif /* IMU_CV5_H_ */
