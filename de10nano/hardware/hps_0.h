@@ -165,5 +165,16 @@
 #define MS_I2C_END 0xdf
 #define MS_I2C_IRQ 5
 
+/*
+ * Macros for device 'time_counter_0', class 'time_counter'
+ * The macros are prefixed with 'TIME_COUNTER_0_'.
+ * The prefix is the slave descriptor.
+ */
+#define TIME_COUNTER_0_COMPONENT_TYPE time_counter
+#define TIME_COUNTER_0_COMPONENT_NAME time_counter_0
+#define TIME_COUNTER_0_BASE 0xe0
+#define TIME_COUNTER_0_SPAN 8
+#define TIME_COUNTER_0_END 0xe7
+
 
 #endif /* _ALTERA_HPS_0_H_ */

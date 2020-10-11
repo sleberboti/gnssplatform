@@ -13,7 +13,8 @@
 #include "socal/socal.h"
 #include "socal/hps.h"
 
-// QSyS dependent address -- Copied from generated "hps_0.h"
+// Platform Designer dependent address -- Copied from generated "hps_0.h"
+#define FPGA_COUNTER_BASE          0xe0
 #define FPGA_MS_I2C_BASE           0xc0    // 32 byte
 #define FPGA_ICM_I2C_BASE          0xa0    // 32 byte
 #define FPGA_IMU_UART_BASE         0x80    // 32 byte
@@ -58,6 +59,7 @@ bool FPGA::Init()
             m_sw_base             = (uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_SW_PIO_BASE)         & (unsigned long)(HW_REGS_MASK));
 			m_ublox_i2c_base	  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_UBLOX_I2C_BASE)      & (unsigned long)(HW_REGS_MASK));
             m_time_base           =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_TIME_BASE)           & (unsigned long)(HW_REGS_MASK));
+            m_counter_base        =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_COUNTER_BASE)        & (unsigned long)(HW_REGS_MASK));
             m_mm_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MM_I2C_BASE)         & (unsigned long)(HW_REGS_MASK));
             m_imu_uart_base		  =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_IMU_UART_BASE) 	   & (unsigned long)(HW_REGS_MASK));
             m_ms_i2c_base         =	(uint8_t *)virtual_base + ((unsigned long)(ALT_LWFPGASLVS_OFST + FPGA_MS_I2C_BASE) 	       & (unsigned long)(HW_REGS_MASK));
@@ -100,7 +102,23 @@ uint32_t FPGA::TimeRead(){
     // subsec = *counter/500000; // centi second
     // subsec = *counter/50000; // milli second
     // subsec = *counter/50; // micro second
-    subsec = *counter/5; // micro tenth 
+    subsec = *counter/1; // micro tenth 
+    //printf("FPGA::TimeRead(): %x | %Lf\n", *counter, double(subsec));
+    return subsec;
+}
+
+uint32_t FPGA::CounterRead(){
+    if (!m_bInitSuccess)
+        return false;
+    uint32_t counter;
+    counter = IORD(m_counter_base,0);
+    uint32_t subsec;
+    // subsec = *counter/5000000; // deci second
+    // subsec = *counter/500000; // centi second
+    // subsec = *counter/50000; // milli second
+    // subsec = *counter/50; // micro second
+    //subsec = *counter/5; // micro tenth
+    subsec = counter; 
     //printf("FPGA::TimeRead(): %x | %Lf\n", *counter, double(subsec));
     return subsec;
 }
@@ -142,6 +160,14 @@ bool FPGA::get_time_addr_base(uint32_t *addr)
 	if (!m_bInitSuccess)
         return false;    
 	*addr = (uint32_t)m_time_base;
+	return true;	
+}
+
+bool FPGA::get_counter_addr_base(uint32_t *addr)
+{
+	if (!m_bInitSuccess)
+        return false;    
+	*addr = (uint32_t)m_counter_base;
 	return true;	
 }
 

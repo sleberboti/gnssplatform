@@ -18,28 +18,18 @@
 #define IORD(base, index) (*(((uint32_t *)base) + index))
 #define IOWR(base, index, data) (*(((uint32_t *)base) + index) = data)
 
-IMU_CV5::IMU_CV5(uint32_t ControllerAddr)
-{
+IMU_CV5::IMU_CV5(uint32_t ControllerAddr){
+    
     m_ControllerAddr = ControllerAddr;
     printf("\n\t[IMU_CV5] ControllerAddress: %lx\n", (long unsigned int)m_ControllerAddr);
     //m_bInitSuccess = setToIdle();  
     
     m_bInitSuccess = streamConfig();
     printf("Update gps time\n");
-    //            0x00000010 seems right
-    // 39771 -> 9B5B current tow to hex
-
-    //               1 2 3
-    //updateGPStime(0x001020310);
-    //updateGPStime(0x8e602);
     printf("Re-read gps time\n");
     readGPStime();
-    //updateGPStime(0x008c66080);
     printf("Update gps week\n");
     updateGPSweek(0x30400010);
-    /*
-    printf("Re-read gps week\n");
-    readGPSweek(); */
 }
 
 IMU_CV5::~IMU_CV5(){
@@ -50,9 +40,7 @@ bool IMU_CV5::readGPStime(){
     len = sizeof(read_time) / sizeof(read_time[0]);
 
     uint8_t* cs = {0};
-    //cs = calcChecksum(iTow8,4);
     cs = calcChecksum(read_time,len-2);
-    //printf("Calced checksum: %x %x\n", cs[0], cs[1]);
 
     // checksum change
     read_time[12] = cs[0];
@@ -93,28 +81,12 @@ bool IMU_CV5::readGPSweek(){
 bool IMU_CV5::updateGPStime(uint32_t iTow){
     bool bSuccess = true;
     uint8_t iTow8[4];
-    /*
-    iTow8[3] = (uint8_t)iTow;
-    iTow8[2] = (uint8_t)(iTow>>=8);
-    iTow8[1] = (uint8_t)(iTow>>=8);
-    iTow8[0] = (uint8_t)(iTow>>=8);
-    */
-
-    /* iTow8[0] = (uint8_t)(iTow>>=4);
-    iTow8[1] = (uint8_t)(iTow>>=8);
-    iTow8[2] = (uint8_t)(iTow>>=8);
-    iTow8[3] = (uint8_t)(iTow>>=8);
-    
-    printf("%x | %x %x %x %x\n",iTow, iTow8[0],iTow8[1],iTow8[2],iTow8[3]); */
     
     iTow8[0] = (uint8_t)iTow;
     iTow8[1] = (uint8_t)(iTow>>=8);
     iTow8[2] = (uint8_t)(iTow>>=8);
     
-    printf("Processing: %x | %x %x %x %x\n",iTow, iTow8[0],iTow8[1],iTow8[2],iTow8[3]);
-
-    
-
+    //printf("Processing: %x | %x %x %x %x\n",iTow, iTow8[0],iTow8[1],iTow8[2],iTow8[3]);  
 
     len = sizeof(time_update) / sizeof(time_update[0]);
     // time_update field change
@@ -212,16 +184,6 @@ sensorPacket IMU_CV5::parseIMUdata(){
         //printf("%0.3f ", gyro_float[i]);
         packetNow.gyro[i]=gyro_float[i];
     }
-    //printf("\n");
-    
-    /* tow_int = globdata[36] << 56 |
-              globdata[35] << 48 |
-              globdata[34] << 40 |
-              globdata[33] << 32 |
-              globdata[32] << 24 |
-              globdata[31] << 16 |
-              globdata[30] <<  8 |
-              globdata[29]; */
 
     tow_int = (uint64_t)globdata[30] << 56 |
               (uint64_t)globdata[31] << 48 |
@@ -240,42 +202,11 @@ sensorPacket IMU_CV5::parseIMUdata(){
                       globdata[36] << 8  |
                       globdata[37];
 
-
-
-    printf("Tow 4: %x %d\n", tow4, tow4);
-    printf("Subsec: %x %d %f\n", subsec, subsec, subsec/1.6777215);
-
-    /* printf("asd = 0x");
-    for (int i=0; i<8; i++){
-        printf("%x", globdata[29+i]);
-    } */
-
-   /*  uint64_t asd;
-    asd = (uint64_t)globdata[29] << 56 | (uint64_t)globdata[30] << 48 | (uint64_t)globdata[31] << 40 | (uint64_t)globdata[32] << 32 | (uint64_t)globdata[33] << 24 | (uint64_t)globdata[34] << 16 | (uint64_t)globdata[35] << 8 | (uint64_t)globdata[36];
-    //printf("Asd %x", asd);
-    printf("\nval = 0x%" PRIx64 "\n", asd); */
     
-    uint16_t week = globdata[38] << 8 | globdata[37];
+    // Week calculation:
+    // uint16_t week = globdata[38] << 8 | globdata[37];
 
-    /* uint16_t ts_flags[3];
-    for (int i=0; i<3; i++){
-        ts_flags[i] = globdata[39+i];
-    }  */
-
-    double tow_dec = tow_int;
-
-    /* printf("\nTow_int from imu(uint64_t): 0x%" PRIx64 " %f\n", tow_int, tow_dec);
-    //printf("\nTow_int from imu(uint64_t): %" PRIu64 " %x\n", tow_int, tow_int);
-    tow_double = static_cast<double>(tow_int); */
-    packetNow.tow=tow4;
-        
-    /* printf("Tow: %0.3f\n", tow_double);
-    printf("Week: %d\n", week);    
-    printf("TsFlags %d %d %d\n", ts_flags[0], ts_flags[1], ts_flags[2]); */
-
-    //packetNow.acc=;
-    //memcpy(acc_float, packetNow.acc, sizeof(acc_float));
-    //memcpy(gyro_float, packetNow.gyro, sizeof(gyro_float));
+    packetNow.tow=int(tow4)*pow(10,9)+subsec*10;
 
     packetNow.sensorname = "imu_cv5";
     return packetNow;
@@ -283,8 +214,6 @@ sensorPacket IMU_CV5::parseIMUdata(){
 
 sensorPacket IMU_CV5::pollIMU()
 {   
-    bool bSuccess = true;
-
     //printf("Polling IMU data\n");
     len = sizeof(poll_imu_data) / sizeof(poll_imu_data[0]);
     uint8_t payload = 0x2a;
@@ -311,8 +240,9 @@ bool IMU_CV5::setToIdle(){
 
 
 bool IMU_CV5::streamConfig(){
-    bool bSuccess;
+    bool bSuccess = true;
     uint8_t payload;
+
     //Continuous Data Command Sequence
 
     #ifdef UART_DEBUG

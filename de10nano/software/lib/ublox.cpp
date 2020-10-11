@@ -22,9 +22,10 @@ UBLOX::~UBLOX() {
 }
 
 bool UBLOX::calcChecksum(uint8_t messageBuffer[], int bufferSize){
-    /* printf("calcChecksum:\n");
-    for (int i=0; i< bufferSize-2; i++){
-        printf("%x ", messageBuffer[i]);
+    //printf("calcChecksum:\n");
+    /* for (int i=0; i< bufferSize; i++){
+        //printf("%d ", messageBuffer[i]);
+        //printf("%x ", messageBuffer[i]);
     } */
     uint8_t CK_A = 0;
     uint8_t CK_B = 0;
@@ -36,15 +37,72 @@ bool UBLOX::calcChecksum(uint8_t messageBuffer[], int bufferSize){
     //printf("\nCalced Cs: %x %x\n", CK_A, CK_B);
 
     if(CK_A == messageBuffer[bufferSize-2] and CK_B == messageBuffer[bufferSize-1]){
-        return true;
+        //printf("CS: TRUEEE\n");
+        return true;        
     }
     else{
+        //printf("CS: false\n");
         return false;
     }
-    printf("CalcChesum ended\n");
+    //printf("CalcChesum ended\n");
 }
 
-sensorPacket UBLOX::reportPVT(){
+//sensorPacket
+void UBLOX::reportMeasx(){
+    printf("\nRXM Measx packet reported\n");
+
+    packetNow.readMeasx = true;
+
+    packetNow.sensorname = "ublox_measx";
+    packetNow.version = measx_validPacket.version;
+    packetNow.gpsTOW = measx_validPacket.gpsTOW;       //[ms]
+    packetNow.gloTOW = measx_validPacket.gloTOW;       //[ms]
+    packetNow.bdsTOW = measx_validPacket.bdsTOW;       //[ms]
+    packetNow.qzssTOW = measx_validPacket.qzssTOW;      //[ms]
+    packetNow.gpsTOWacc = measx_validPacket.gpsTOWacc;    //[ms]
+    packetNow.gloTOWacc = measx_validPacket.gloTOWacc;    //[ms]
+    packetNow.bdsTOWacc = measx_validPacket.bdsTOWacc;    //[ms]
+    packetNow.qzssTOWacc = measx_validPacket.qzssTOWacc;   //[ms]
+    packetNow.measx_numSV = measx_validPacket.measx_numSV;
+    packetNow.measx_flags = measx_validPacket.measx_flags;
+
+    memcpy(packetNow.measx_repeated, measx_validPacket.measx_repeated, sizeof(packetNow.measx_repeated));
+
+    /* for(int i=0; i<measx_validPacket.measx_numSV; i++){
+        printf("%i, %i\n", i, packetNow.measx_repeated[i].measx_gnssId);
+    }  */ 
+
+    //return packetNow;
+}
+
+//sensorPacket
+void UBLOX::reportSfrbx(){
+
+    packetNow.readSfrbx = true;
+
+    printf("\nRXM Sfrbx packet reported\n");
+
+    packetNow.sensorname = "ublox_sfrbx";
+    packetNow.gnssId = sfrbx_validPacket.gnssId;
+    packetNow.svId = sfrbx_validPacket.svId;
+    packetNow.freqId = sfrbx_validPacket.freqId;
+    packetNow.numWords = sfrbx_validPacket.numWords;    // up to 10
+    packetNow.chn = sfrbx_validPacket.chn;    
+    packetNow.sfrbx_version = sfrbx_validPacket.sfrbx_version;
+
+    //printf("\nSfrbx memcpy\n");
+    memcpy(packetNow.dwrd, sfrbx_validPacket.drwd, sizeof(packetNow.dwrd));
+
+    //return packetNow;
+}
+
+//sensorPacket
+void UBLOX::reportPVT(){
+
+    printf("\nPVT packet reported\n");
+
+    packetNow.readPvt = true;
+
     packetNow.sensorname = "ublox_pvt";
     packetNow.iTOW = validPacket.iTOW;    
     packetNow.year = validPacket.year;
@@ -127,34 +185,24 @@ sensorPacket UBLOX::reportPVT(){
     printf("magAcc:%f\n",(float)validPacket.magAcc*1e-2);
     #endif
 
-    return packetNow;
+    //return packetNow;
 }
 
-sensorPacket UBLOX::getUbloxBuffer(){
-    // GETTING PVT FROM BUFFER
-    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);    
 
-    /* while (!checkSum){
-        readBytes(devAddr, 0xff, bufferSize, buffer); 
-        //printf("Buffer: ");
-        //for (int i=0; i<bufferSize; i++){
-        //    printf("%x ", buffer[i]);
-        //}
-        checkSum = calcChecksum(buffer, bufferSize);
-    } */
+sensorPacket UBLOX::getPvtBuffer(){
+    // GETTING Pvt from Buffer
+    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);
     
     checksum = false;
     while(!checksum){
         //printf("Buffer: ");
         readBytes(devAddr, 0xff, bufferSize, buffer); 
         for (int i=0; i<bufferSize; i++){
-            //printf("%x ", buffer[i]);
-            if (buffer[i]==ubxHeader[0] && buffer[i+1]==ubxHeader[1]){
-                if (buffer[i+2]==ubxNavPvt_msgClass && buffer[i+3]==ubxNavPvt_msgId){
-                    printf("PVT packet found\n");
+            if (buffer[i+2]==ubxNavPvt_msgClass && buffer[i+3]==ubxNavPvt_msgId){
+                    printf("\nPVT packet found\n");
                     for (int j=0; j<ubxNavPvt_msgLen; j++){
                         byte = buffer[i+2+j];
-                        printf("%x ", byte);
+                        //printf("%d ", byte);
                         *((uint8_t *) &tempPacket+j) = byte;
                         ubxNavPvt_buffer[j] = byte;
                     }
@@ -165,23 +213,208 @@ sensorPacket UBLOX::getUbloxBuffer(){
                     checksum = calcChecksum(ubxNavPvt_buffer, ubxNavPvt_msgLen+2);
                     if (checksum){
                         validPacket = tempPacket;
-                        return reportPVT();
+                        reportPVT();
+                    }
+                    //printf("Cs result: %d\n\n", cs);
+            }
+        }
+    }
+    return packetNow;
+}
+
+sensorPacket UBLOX::getMeasxBuffer(){
+    // GETTING Measx from Buffer
+    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);
+    
+    checksum = false;
+    while(!checksum){
+        //printf("Buffer: ");
+        readBytes(devAddr, 0xff, bufferSize, buffer); 
+        for (int i=0; i<bufferSize; i++){
+            if (buffer[i]==ubxHeader[0] && buffer[i+1]==ubxHeader[1]){
+                int ubxRxmMeasx_baseLength = 44+4;
+                if (i>=bufferSize-ubxRxmMeasx_baseLength) break;
+                if (buffer[i+2]==ubxRxmMeasx_msgClass && buffer[i+3]==ubxRxmMeasx_msgId){
+                    printf("\nRAW Measx packet found\n");
+                    uint8_t ubxRxmMeasx_buffer[ubxRxmMeasx_msgLen];
+                    
+                    int ubxRxmMeasx_dataLength = 0;
+                    int ubxRxmMeasx_baseLength = 44+4;
+
+                    ubxRxmMeasx_dataLength = ubxRxmMeasx_baseLength;
+
+                    for (int j=0; j<ubxRxmMeasx_baseLength; j++){
+                        //if(j==4) printf("\n");
+                        byte = buffer[i+2+j];
+                        //printf("%x ", byte);
+                        *((uint8_t *) &measx_tempPacket+j) = byte;
+                        ubxRxmMeasx_buffer[j] = byte;
+                    }
+
+                    //printf("\n Measx NumSV: %d\n",measx_tempPacket.measx_numSV);
+
+                    if (i>=bufferSize-ubxRxmMeasx_baseLength-(measx_tempPacket.measx_numSV)*24) break;
+
+                    for (int k=0; k<(measx_tempPacket.measx_numSV)*24; k++){
+                        //if(k%4==0) printf("\n\t");
+                        byte = buffer[i+2+ubxRxmMeasx_baseLength+k];
+                        *((uint8_t *) &measx_tempPacket+ubxRxmMeasx_baseLength+k) = byte;
+                        //*((uint8_t *) &measx_repeated+k) = byte;
+                        //printf("%x ", byte);
+                        ubxRxmMeasx_buffer[ubxRxmMeasx_baseLength+k] = byte;       
+                    }
+                    ubxRxmMeasx_dataLength = ubxRxmMeasx_baseLength + (measx_tempPacket.measx_numSV)*24;
+
+                    ubxRxmMeasx_buffer[ubxRxmMeasx_dataLength]= buffer[i+2+ubxRxmMeasx_dataLength];
+                    ubxRxmMeasx_buffer[ubxRxmMeasx_dataLength+1]= buffer[i+2+ubxRxmMeasx_dataLength+1];
+                    ubxRxmMeasx_dataLength += 2; // added checksum
+
+                    checksum = calcChecksum(ubxRxmMeasx_buffer, ubxRxmMeasx_dataLength);
+
+                    if (checksum){
+                        measx_validPacket = measx_tempPacket;
+                        //return reportMeasx();
                         break;
                     }
-                    //printf("Cs result: %d\n\n", cs);                    
+                    else{
+                        return packetNow;
+                    }
 
-                }
-                if (buffer[i+2]==rawx_sop[0] && buffer[i+3]==rawx_sop[1]){
-                    printf("RAWX packet found\n");
-                    /* for (int j=0; j<rawSize; j++){
-                        bufferPVT[j] = buffer[i];
-                    } */
                 }
             }
         }
-        //printf("\n");
     } 
     return packetNow; // was commented
+}
+
+sensorPacket UBLOX::getUbloxBuffer(){
+    int bufferSize = sizeof(buffer) / sizeof(buffer[0]);    
+    //printf("wtf? %d", bufferSize);
+    
+    packetNow.readPvt   = false;
+    packetNow.readMeasx = false;
+    packetNow.readSfrbx = false;
+
+    checksum = false;
+
+    readBytes(devAddr, 0xff, bufferSize, buffer); 
+    for (int i=0; i<bufferSize-500; i++){
+        //printf("%x ", buffer[i]);
+        //printf("%d ", i);
+        if (buffer[i]==ubxHeader[0] && buffer[i+1]==ubxHeader[1]){
+            if (buffer[i+2]==ubxNavPvt_msgClass && buffer[i+3]==ubxNavPvt_msgId){
+                //printf("\nPVT packet found\n");
+                for (int j=0; j<ubxNavPvt_msgLen; j++){
+                    byte = buffer[i+2+j];
+                    //printf("%d ", byte);
+                    *((uint8_t *) &tempPacket+j) = byte;
+                    ubxNavPvt_buffer[j] = byte;
+                }
+                ubxNavPvt_buffer[ubxNavPvt_msgLen]= buffer[i+2+ubxNavPvt_msgLen];
+                ubxNavPvt_buffer[ubxNavPvt_msgLen+1]= buffer[i+2+ubxNavPvt_msgLen+1];
+
+                //printf("\n PVT NumSV: %d\n",tempPacket.numSV);
+
+                //printf("\n Cs data: %x %x\n", ubxNavPvt_buffer[ubxNavPvt_msgLen], ubxNavPvt_buffer[ubxNavPvt_msgLen+1]); //checksums
+                checksum = calcChecksum(ubxNavPvt_buffer, ubxNavPvt_msgLen+2);
+                if (checksum){
+                    validPacket = tempPacket;
+                    reportPVT();
+                }
+                //printf("Cs result: %d\n\n", cs);                    
+
+            }
+
+            if (buffer[i+2]==ubxRxmSfrbx_msgClass && buffer[i+3]==ubxRxmSfrbx_msgId){
+                //printf("\nRXM Sfrbx packet found\n");
+
+                //ubxRxmSfrbx_msgLen = 8;                    
+                uint8_t ubxRxmSfrbx_buffer[ubxRxmSfrbx_msgLen];
+
+                int ubxRxmSfrbx_dataLength = 0;
+                int ubxRxmSfrbx_baseLength = 8+4;
+
+                ubxRxmSfrbx_dataLength = ubxRxmSfrbx_baseLength;
+                for (int j=0; j<ubxRxmSfrbx_baseLength; j++){
+                    //if(j==4) printf("\n");
+                    byte = buffer[i+2+j];
+                    //printf("%x ", byte);
+                    *((uint8_t *) &sfrbx_tempPacket+j) = byte;
+                    ubxRxmSfrbx_buffer[j] = byte;
+                }
+                
+                //printf("GnssID: %d Num words: %d \n", sfrbx_tempPacket.gnssId, sfrbx_tempPacket.numWords);
+
+                for (int k=0; k<(sfrbx_tempPacket.numWords)*4; k++){
+                    //if(k%4==0) printf("\n\t");
+                    byte = buffer[i+2+ubxRxmSfrbx_baseLength+k];
+                    *((uint8_t *) &sfrbx_tempPacket+ubxRxmSfrbx_baseLength+k) = byte;
+                    //printf("%x ", byte);
+                    ubxRxmSfrbx_buffer[ubxRxmSfrbx_baseLength+k] = byte;       
+                }
+                ubxRxmSfrbx_dataLength = ubxRxmSfrbx_baseLength + (sfrbx_tempPacket.numWords)*4;
+
+                ubxRxmSfrbx_buffer[ubxRxmSfrbx_dataLength]= buffer[i+2+ubxRxmSfrbx_dataLength];
+                ubxRxmSfrbx_buffer[ubxRxmSfrbx_dataLength+1]= buffer[i+2+ubxRxmSfrbx_dataLength+1];
+                ubxRxmSfrbx_dataLength += 2; // added checksum
+                //printf("Checksums: %x %x\n", ubxRxmSfrbx_buffer[ubxRxmSfrbx_dataLength], ubxRxmSfrbx_buffer[ubxRxmSfrbx_dataLength+1]);
+
+                /* for(int g=0; g<sfrbx_tempPacket.numWords; g++){
+                    printf("\nDrwd[%d]: %x\n", g, sfrbx_tempPacket.drwd[g]);
+                } */
+                
+                checksum = calcChecksum(ubxRxmSfrbx_buffer, ubxRxmSfrbx_dataLength);
+
+                if (checksum){
+                    sfrbx_validPacket = sfrbx_tempPacket;
+                    reportSfrbx();
+                }
+            }
+
+            if (buffer[i+2]==ubxRxmMeasx_msgClass && buffer[i+3]==ubxRxmMeasx_msgId){
+                //printf("\nRAW Measx packet found\n");
+                uint8_t ubxRxmMeasx_buffer[ubxRxmMeasx_msgLen];
+                
+                int ubxRxmMeasx_dataLength = 0;
+                int ubxRxmMeasx_baseLength = 44+4;
+
+                ubxRxmMeasx_dataLength = ubxRxmMeasx_baseLength;
+
+                for (int j=0; j<ubxRxmMeasx_baseLength; j++){
+                    //if(j==4) printf("\n");
+                    byte = buffer[i+2+j];
+                    //printf("%x ", byte);
+                    *((uint8_t *) &measx_tempPacket+j) = byte;
+                    ubxRxmMeasx_buffer[j] = byte;
+                }
+
+                //printf("\n Measx NumSV: %d\n",measx_tempPacket.measx_numSV);
+
+                for (int k=0; k<(measx_tempPacket.measx_numSV)*24; k++){
+                    //if(k%4==0) printf("\n\t");
+                    byte = buffer[i+2+ubxRxmMeasx_baseLength+k];
+                    *((uint8_t *) &measx_tempPacket+ubxRxmMeasx_baseLength+k) = byte;
+                    //*((uint8_t *) &measx_repeated+k) = byte;
+                    //printf("%x ", byte);
+                    ubxRxmMeasx_buffer[ubxRxmMeasx_baseLength+k] = byte;       
+                }
+                ubxRxmMeasx_dataLength = ubxRxmMeasx_baseLength + (measx_tempPacket.measx_numSV)*24;
+
+                ubxRxmMeasx_buffer[ubxRxmMeasx_dataLength]= buffer[i+2+ubxRxmMeasx_dataLength];
+                ubxRxmMeasx_buffer[ubxRxmMeasx_dataLength+1]= buffer[i+2+ubxRxmMeasx_dataLength+1];
+                ubxRxmMeasx_dataLength += 2; // added checksum
+
+                checksum = calcChecksum(ubxRxmMeasx_buffer, ubxRxmMeasx_dataLength);
+
+                if (checksum){
+                    measx_validPacket = measx_tempPacket;
+                    reportMeasx();
+                }
+            }
+        }
+    }
+
+    return packetNow;
 }
 
 bool UBLOX::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){
@@ -263,16 +496,3 @@ bool UBLOX::readBits(uint32_t devAddr, uint8_t RegIndex, uint8_t BitEndIndex, ui
 
 	return bSuccess;
 }
-
-
-
-void UBLOX::initialize() {
-    // setClockSource(MPU6050_CLOCK_INTERNAL);
-    // setFullScaleGyroRange(MPU6050_GYRO_FS_2000);
-    // setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-    // setDLPF(1);
-    // setSample_div(9);
-    // setIntEnable(1);
-    // setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
-}
-

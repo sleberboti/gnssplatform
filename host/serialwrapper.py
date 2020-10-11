@@ -63,46 +63,47 @@ class ReadLine(SerialWrapper, threading.Thread):
                 message = message[accpos+4:]
                 for _ in range(3):
                     commapos = message.find(',')
-                    acc.append(float(message[:commapos]))
-                    message = message[commapos+1:]
+                    try:
+                        acc.append(float(message[:commapos]))
+                        message = message[commapos+1:]
+                    except Exception:
+                        pass
                 gyropos = message.find('gyro:')
                 message = message[gyropos+5:]
                 for _ in range(3):
                     commapos = message.find(',')
-                    gyro.append(float(message[:commapos]))
-                    message = message[commapos+1:]            
+                    try:
+                        gyro.append(float(message[:commapos]))
+                        message = message[commapos+1:]  
+                    except Exception:
+                        pass          
                 towpos = message.find('tow:')
                 seppos = message.find("|")
-                tow = float(message[towpos+4:seppos-1])
-
-                #for _ in range(3):
-                #    data.append([])
-
-                data.append(sensorname)
-                data.append(acc)
-                data.append(gyro)
-                data.append(tow)
+                try:
+                    tow = float(message[towpos+4:seppos-1])
+                except Exception:
+                    pass
+                
+                try:
+                    data.append(sensorname)
+                    data.append(acc)
+                    data.append(gyro)
+                    data.append(tow)
+                except Exception:
+                    pass
             
-            if sensorname == 'mm': 
+            if sensorname == 'mm':
                 mm = []
-                xpos = message.find('x:')                
-                message = message[xpos+2:]
-                commapos = message.find(',')
-                mm.append(message[:commapos-1])
+                numOfFields = 4
+                for _ in range (numOfFields):
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                 
+                    mm.append(message[colonpos+1:commapos])
+                    message = message[commapos+1:]
 
-                ypos = message.find('y:') 
-                message = message[ypos+2:]
-                commapos = message.find(',')                
-                mm.append(message[:commapos-1])
-
-                zpos = message.find('z:') 
-                message = message[zpos+2:]
-                commapos = message.find('|') 
-                mm.append(message[:commapos-1])
-
+                print(mm)
                 data.append(sensorname)
                 data.append(mm)
-                print(" ")
             
             if sensorname == 'ublox_pvt':
                 pvt = []
@@ -114,13 +115,62 @@ class ReadLine(SerialWrapper, threading.Thread):
                     pvt.append(message[colonpos+1:commapos-1])
                     message = message[commapos+1:]
 
-                print(pvt)
+                #print(pvt)
                 data.append(sensorname)
                 data.append(pvt)
 
+            if sensorname == 'ublox_measx':
+                measx = []
+                numOfFields = 10
+                for _ in range (numOfFields):
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                    
+                    measx.append(message[colonpos+1:commapos])
+                    message = message[commapos+1:]
+
+                #print("numsv:", measx[8])
+                
+                if int(measx[8])>=1:
+                    for _ in range (int(measx[8])):
+                        for _ in range (11):
+                            colonpos = message.find(':')
+                            commapos = message.find(',')                    
+                            measx.append(message[colonpos+1:commapos])
+                            message = message[commapos+1:]
+
+                #print(measx)
+                data.append(sensorname)
+                data.append(measx)
+
+            if sensorname == 'ublox_sfrbx':
+                sfrbx = []
+                numOfFields = 5
+
+                for _ in range (numOfFields):
+                    colonpos = message.find(':')
+                    commapos = message.find(',')                    
+                    sfrbx.append(message[colonpos+1:commapos])
+                    message = message[commapos+1:]
+
+                #print("numData:", sfrbx[3])
+
+                if int(sfrbx[3])>=1:
+                    for _ in range (int(sfrbx[3])):
+                        colonpos = message.find(':')
+                        commapos = message.find(',')                    
+                        sfrbx.append(message[colonpos+1:commapos])
+                        message = message[commapos+1:]
+
+                for _ in range (10-int(sfrbx[3])):
+                    sfrbx.append('0')
+
+                #print(sfrbx)
+                data.append(sensorname)
+                data.append(sfrbx)
+
             if sensorname == 'ms':
                 ms = []
-                numOfFields = 2
+                numOfFields = 3
                 for _ in range (numOfFields):
                     colonpos = message.find(':')
                     commapos = message.find(',')                 
@@ -133,7 +183,7 @@ class ReadLine(SerialWrapper, threading.Thread):
             
             if sensorname == 'imu_icm':
                 imu_icm = []
-                numOfFields = 10
+                numOfFields = 11
                 for _ in range (numOfFields):
                     colonpos = message.find(':')
                     commapos = message.find(',')                 

@@ -185,6 +185,7 @@ soc_system u0(
 					
 					// Time sync related stuff
 					.pps_input(PPS),
+					.pps_1_input(PPS),
 					
 					// Magnetometer I2C
 					.mm_i2c_scl_pad_io(MM_SCL),

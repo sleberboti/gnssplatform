@@ -19,22 +19,40 @@ signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
 if __name__ ==  '__main__':
 
+
+    # MEASUREMENT VALUES
+    duration = 1000
+    frequency = 5
+
     ser = SerialWrapper(shared.port)
 
     #ser.sendData("exit")
     ser.sendData("root")
-    time.sleep(0.3)
-    ser.sendData("./platform host")
+    time.sleep(2)
+    #ser.sendData("./platform host")
+    ser.sendData("./platform host_init")
     time.sleep(5)
 
-    for _ in range(3):
+    # MEASUREMENT COMMANDS
+    ser.sendData("|Host|freq|"+str(frequency)+"|")  # Hz
+    ser.sendData("|Host|dur|"+str(duration)+"|")    # in seconds
+    ser.sendData("|Host|imu_cv5|acc|gyro|tow||")
+    ser.sendData("|Host|mm|mmdata||")
+    ser.sendData("|Host|ublox|pvt|measx|sfrbx||")
+    ser.sendData("|Host|ms|msdata|")
+    ser.sendData("|Host|imu_icm|acc|gyro|mm|temp||")
+
+
+    # used for host dicatated measurements
+    """ for _ in range(200):
         ser.sendData("|Host|imu_cv5|acc|gyro|tow||")
-        #ser.sendData("|Host|mm|mmdata||")
-        ser.sendData("|Host|ublox|pvt||")
-        #ser.sendData("|Host|ms|msdata||")
-        #ser.sendData("|Host|imu_icm|acc|gyro|mm|temp||")
-        time.sleep(1)
+        ser.sendData("|Host|mm|mmdata||")
+        ser.sendData("|Host|ublox|pvt|measx|sfrbx||")
+        ser.sendData("|Host|ms|msdata|")
+        ser.sendData("|Host|imu_icm|acc|gyro|mm|temp||")
+        time.sleep(0.5) """
     
+    time.sleep(duration+10)
     ser.sendData("killthread")
     time.sleep(1)
     ser.sendData("\x03")

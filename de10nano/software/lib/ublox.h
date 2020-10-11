@@ -16,13 +16,21 @@
 class UBLOX {
 private:
 	uint8_t buffer[1000];
-	uint8_t bufferPVT[100];
-	//int pvtSize = 100;
 
 	const uint8_t ubxHeader[2] = {0xB5, 0x62};
-    const uint8_t ubxNavPvt_msgClass = 0x01;
-    const uint8_t ubxNavPvt_msgId = 0x07;
+  const uint8_t ubxNavPvt_msgClass = 0x01;
+  const uint8_t ubxNavPvt_msgId = 0x07;
+
+  const uint8_t ubxRxmMeasx_msgClass = 0x02;
+  const uint8_t ubxRxmMeasx_msgId = 0x14;
+
+  const uint8_t ubxRxmSfrbx_msgClass = 0x02;
+  const uint8_t ubxRxmSfrbx_msgId = 0x13;
+
 	static const uint16_t ubxNavPvt_msgLen = 96;
+  uint16_t ubxRxmMeasx_msgLen = 2000; // always changing -> 44 + 24*numSV
+  uint8_t  ubxRxmSfrbx_msgLen = 48;  // always changing -> 8 + 4*numWords, max=48
+
 	uint8_t ubxNavPvt_buffer[ubxNavPvt_msgLen];
 	uint8_t byte;
 
@@ -35,7 +43,6 @@ private:
 	uint8_t rawx_sop[2] = {0x02, 0x15};
 	
 	bool checksum;
-
 
 	struct UBX_NAV_PVT {
       uint8_t msg_class;
@@ -98,6 +105,80 @@ private:
 	struct UBX_NAV_PVT tempPacket;
 	struct UBX_NAV_PVT validPacket;
 
+  struct UBX_RXM_MEASX_REPEATED{
+    uint8_t  measx_gnssId;
+    uint8_t  measx_svId;
+    uint8_t  measx_cNo;
+    uint8_t  measx_mpathIndic;
+    uint32_t measx_dopplerMS;
+    uint32_t measx_dopplerHz;
+    uint16_t measx_wholeChips;
+    uint16_t measx_fracChips;
+    uint32_t measx_codePhase;
+    uint8_t  measx_intCodePhase;
+    uint8_t  measx_pseuRangeRMSErr;
+    uint16_t measx_reserved5;
+  };
+
+  struct UBX_RXM_MEASX{
+    //ubx-rxm-measx
+    uint8_t  measx_msg_class;
+    uint8_t  measx_msg_id;
+    uint8_t  measx_placeholder[2];
+    uint8_t  version;
+    uint8_t  reserved11;
+    uint8_t  reserved12;
+    uint8_t  reserved13;
+    uint32_t gpsTOW;       //[ms]
+    uint32_t gloTOW;       //[ms]
+    uint32_t bdsTOW;       //[ms]
+    uint8_t  reserved21;
+    uint8_t  reserved22;
+    uint8_t  reserved23;
+    uint8_t  reserved24;
+    uint32_t qzssTOW;      //[ms]
+    uint16_t gpsTOWacc;    //[ms]
+    uint16_t gloTOWacc;    //[ms]
+    uint16_t bdsTOWacc;    //[ms]
+    uint8_t  reserved31;
+    uint8_t  reserved32;
+    uint16_t qzssTOWacc;   //[ms]
+    uint8_t  measx_numSV;
+    uint8_t  measx_flags;
+    uint8_t  reserved41;
+    uint8_t  reserved42;
+    uint8_t  reserved43;
+    uint8_t  reserved44;
+    uint8_t  reserved45;
+    uint8_t  reserved46;
+    uint8_t  reserved47;
+    uint8_t  reserved48;
+    UBX_RXM_MEASX_REPEATED measx_repeated[50];
+    
+  };
+
+  struct UBX_RXM_MEASX measx_tempPacket;
+  struct UBX_RXM_MEASX measx_validPacket;
+  
+
+  struct UBX_RXM_SFRBX{
+    //ubx-rxm-sfrbx
+    uint8_t  sfrbx_msg_class;
+    uint8_t  sfrbx_msg_id;
+    uint8_t  placeholder[2];
+    uint8_t  gnssId;
+    uint8_t  svId;
+    uint8_t  sfrbx_reserved1;
+    uint8_t  freqId;
+    uint8_t  numWords; // up to 10
+    uint8_t  chn;    
+    uint8_t  sfrbx_version;
+    uint8_t  sfrbx_reserved2;    
+    uint32_t drwd[20];
+  };
+  struct UBX_RXM_SFRBX sfrbx_tempPacket;
+  struct UBX_RXM_SFRBX sfrbx_validPacket;
+
 	sensorPacket packetNow;
 
 protected:
@@ -114,11 +195,16 @@ public:
 	virtual ~UBLOX();
 
 	sensorPacket getUbloxBuffer();
-	sensorPacket reportPVT();
+  sensorPacket getMeasxBuffer();
+  sensorPacket getPvtBuffer();
+	//sensorPacket
+  void reportPVT();
+  //sensorPacket 
+  void reportSfrbx();
+  //sensorPacket
+  void reportMeasx();
 	bool calcChecksum(uint8_t messageBuffer[], int bufferSize);
-	//bool processGPS(NAV_PVT pvt, uint8_t buffer_poll[100]);
 
-	void initialize();
 };
 
 #endif /* UBLOX_H_ */

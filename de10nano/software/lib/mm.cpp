@@ -40,18 +40,16 @@ void MM::initialize() {
     #endif
 }
 
-sensorPacket MM::parseMMdata(uint32_t globitow){
+sensorPacket MM::parseMMdata(){
     packetNow.sensorname = "mm";
     packetNow.mm[0] = mmData[0];
     packetNow.mm[1] = mmData[2];
-    packetNow.mm[2] = mmData[4];
-    packetNow.mm_itow = globitow;
-    
+    packetNow.mm[2] = mmData[4];   
 
     return packetNow;
 }
 
-sensorPacket MM::getMMdata(uint32_t globitow){
+sensorPacket MM::getMMdata(){
     readBytes(devAddr, mmX1, 1, regValue);
     printf("MM registers:\n");
     printf("\tX:  %d ", regValue[0]);
@@ -75,7 +73,7 @@ sensorPacket MM::getMMdata(uint32_t globitow){
     WriteReg (devAddr, control2, 0x6);
     WriteReg (devAddr, control1, 0x6); 
 
-    return parseMMdata(globitow);
+    return parseMMdata();
 }
 
 bool MM::WriteReg(uint32_t devAddr, uint8_t RegIndex, uint8_t RegValue){

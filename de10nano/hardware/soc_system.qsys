@@ -172,6 +172,14 @@
          type = "String";
       }
    }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
    element switch
    {
       datum _sortIndex
@@ -211,6 +219,27 @@
       datum baseAddress
       {
          value = "96";
+         type = "String";
+      }
+   }
+   element time_counter_0
+   {
+      datum _sortIndex
+      {
+         value = "11";
+         type = "int";
+      }
+   }
+   element time_counter_0.s0
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "224";
          type = "String";
       }
    }
@@ -310,6 +339,7 @@
    dir="end" />
  <interface name="ms_i2c" internal="ms_i2c.export" type="conduit" dir="end" />
  <interface name="pps" internal="time_sync_0.pps" type="conduit" dir="end" />
+ <interface name="pps_1" internal="time_counter_0.pps" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
  <interface
    name="switch"
@@ -915,6 +945,7 @@
   <parameter name="targetClockRate" value="5000000" />
   <parameter name="targetSlaveSelectToSClkDelay" value="0.0" />
  </module>
+ <module name="time_counter_0" kind="time_counter" version="1.0" enabled="1" />
  <module name="time_sync_0" kind="time_sync" version="1.0" enabled="1" />
  <module name="ublox_i2c" kind="i2c_opencores" version="12.0" enabled="1" />
  <connection
@@ -960,6 +991,15 @@
    end="custom_leds_0.s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0030" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="18.1"
+   start="hps_0.h2f_lw_axi_master"
+   end="time_counter_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00e0" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1015,6 +1055,11 @@
    end="magnetometer_i2c.clock" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="ms_i2c.clock" />
  <connection kind="clock" version="18.1" start="clk_0.clk" end="icm_i2c.clock" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="clk_0.clk"
+   end="time_counter_0.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -1112,6 +1157,11 @@
    version="18.1"
    start="clk_0.clk_reset"
    end="CV5_25_uart.reset" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="time_counter_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>
